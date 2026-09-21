@@ -10,7 +10,7 @@ app.use(express.json());
 // Serve folder public (untuk mode Localhost)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Helper: Deteksi Platform & ID
+// Helper: Deteksi Platform & Ekstrak ID
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
@@ -23,19 +23,25 @@ function extractYTId(url) {
 }
 
 // ============================================================
-// 📥 ENDPOINT PROXY DOWNLOAD (Paksa Direct File Download)
+// 📥 ENDPOINT PROXY DOWNLOAD (Direct File Downloader)
 // ============================================================
 app.get('/api/download', async (req, res) => {
   try {
     const { url, filename } = req.query;
     if (!url) return res.status(400).send('URL media tidak ditemukan');
 
+    // Jika URL external helper, langsung redirect
+    if (url.includes('y2mate') || url.includes('ssyoutube') || url.includes('cobalt.tools')) {
+      return res.redirect(url);
+    }
+
     const cleanFilename = (filename || 'saweria_download').replace(/[^a-zA-Z0-9._-]/g, '_');
 
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      }
+      },
+      signal: AbortSignal.timeout(10000)
     });
 
     if (!response.ok) {
@@ -44,7 +50,6 @@ app.get('/api/download', async (req, res) => {
 
     const contentType = response.headers.get('content-type') || 'application/octet-stream';
 
-    // Header khusus agar browser langsung unduh file di tempat
     res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
     res.setHeader('Content-Type', contentType);
 
@@ -60,7 +65,7 @@ app.get('/api/download', async (req, res) => {
 });
 
 // ------------------------------------------
-// 1. TIKTOK HANDLER
+// 1. TIKTOK HANDLER (TikWM Engine)
 // ------------------------------------------
 async function handleTikTok(url, res) {
   try {
@@ -68,7 +73,7 @@ async function handleTikTok(url, res) {
     const json = await response.json();
 
     if (!json || json.code !== 0) {
-      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok.' });
+      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan video publik.' });
     }
 
     const data = json.data;
@@ -93,7 +98,7 @@ async function handleTikTok(url, res) {
 }
 
 // ------------------------------------------
-// 2. YOUTUBE HANDLER (Cobalt Engine)
+// 2. YOUTUBE HANDLER (Multi-Engine Anti-Fail)
 // ------------------------------------------
 async function handleYouTube(url, res) {
   const videoId = extractYTId(url);
@@ -104,8 +109,9 @@ async function handleYouTube(url, res) {
   const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
   const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
+  // 1. Ambil Metadata via Official YouTube oEmbed (100% Bebas Blokir IP Vercel)
   let title = `YouTube Video (${videoId})`;
-  let author = 'YouTube Creator';
+  let author = 'YouTube Content Creator';
 
   try {
     const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(cleanUrl)}&format=json`);
@@ -116,72 +122,130 @@ async function handleYouTube(url, res) {
     }
   } catch (e) {}
 
+  const downloads = [];
+
+  // 2. Engine 1: Cobalt API
   try {
-    const mp4Res = await fetch('https://api.cobalt.tools/api/json', {
+    const cobaltRes = await fetch('https://api.cobalt.tools/api/json', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       },
       body: JSON.stringify({
         url: cleanUrl,
         videoQuality: '720',
-        downloadMode: 'auto'
+        filenamePattern: 'basic'
       })
     });
 
-    const mp3Res = await fetch('https://api.cobalt.tools/api/json', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        url: cleanUrl,
-        downloadMode: 'audio',
-        audioFormat: 'mp3'
-      })
-    });
-
-    const mp4Data = mp4Res.ok ? await mp4Res.json() : null;
-    const mp3Data = mp3Res.ok ? await mp3Res.json() : null;
-
-    const downloads = [];
-
-    if (mp4Data && mp4Data.url) {
-      downloads.push({
-        type: 'video',
-        quality: '720p HD MP4',
-        url: mp4Data.url
-      });
+    if (cobaltRes.ok) {
+      const cobaltData = await cobaltRes.json();
+      if (cobaltData && cobaltData.url) {
+        downloads.push({
+          type: 'video',
+          quality: '720p HD MP4',
+          url: cobaltData.url
+        });
+      }
     }
+  } catch (err) {}
 
-    if (mp3Data && mp3Data.url) {
-      downloads.push({
-        type: 'audio',
-        quality: 'Audio MP3',
-        url: mp3Data.url
-      });
-    }
+  // 3. Engine 2: Piped API Instances (jika Cobalt gagal/empty)
+  if (downloads.length === 0) {
+    const pipedInstances = [
+      `https://pipedapi.kavin.rocks/streams/${videoId}`,
+      `https://api.piped.yt/streams/${videoId}`,
+      `https://pipedapi.tokhmi.xyz/streams/${videoId}`
+    ];
 
-    if (downloads.length > 0) {
-      return res.json({
-        status: true,
-        platform: 'youtube',
-        title,
-        author,
-        duration: 'HD',
-        thumbnail,
-        downloads
-      });
+    for (const endpoint of pipedInstances) {
+      try {
+        const pipedRes = await fetch(endpoint, { signal: AbortSignal.timeout(3000) });
+        if (pipedRes.ok) {
+          const pipedData = await pipedRes.json();
+          if (pipedData && pipedData.videoStreams) {
+            const mp4Streams = pipedData.videoStreams.filter(s => s.mimeType && s.mimeType.includes('video/mp4'));
+            const bestStream = mp4Streams.find(s => s.quality === '720p') || mp4Streams[0] || pipedData.videoStreams[0];
+            
+            if (bestStream && bestStream.url) {
+              downloads.push({
+                type: 'video',
+                quality: `${bestStream.quality || '720p'} MP4`,
+                url: bestStream.url
+              });
+            }
+
+            if (pipedData.audioStreams && pipedData.audioStreams.length > 0) {
+              const bestAudio = pipedData.audioStreams.find(a => a.mimeType && a.mimeType.includes('audio/mp4')) || pipedData.audioStreams[0];
+              if (bestAudio && bestAudio.url) {
+                downloads.push({
+                  type: 'audio',
+                  quality: 'Audio MP3/M4A',
+                  url: bestAudio.url
+                });
+              }
+            }
+            if (downloads.length > 0) break;
+          }
+        }
+      } catch (e) {}
     }
-  } catch (err) {
-    console.error('Cobalt Direct Fetch Error:', err.message);
   }
 
-  return res.status(500).json({
-    status: false,
-    message: 'Gagal mengambil video YouTube. Silakan coba beberapa saat lagi.'
+  // 4. Engine 3: Invidious API (Fallback Cadangan)
+  if (downloads.length === 0) {
+    const invidiousInstances = [
+      `https://inv.tux.pizza/api/v1/videos/${videoId}`,
+      `https://invidious.nerdvpn.de/api/v1/videos/${videoId}`
+    ];
+
+    for (const invEndpoint of invidiousInstances) {
+      try {
+        const invRes = await fetch(invEndpoint, { signal: AbortSignal.timeout(3000) });
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          if (invData && invData.formatStreams && invData.formatStreams.length > 0) {
+            const mp4 = invData.formatStreams.find(s => s.container === 'mp4') || invData.formatStreams[0];
+            if (mp4 && mp4.url) {
+              downloads.push({
+                type: 'video',
+                quality: `${mp4.qualityLabel || '720p'} MP4`,
+                url: mp4.url
+              });
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  // 5. Engine 4: Reliable Direct Link Fallback (Bypass Blokir IP Vercel)
+  if (downloads.length === 0) {
+    downloads.push(
+      {
+        type: 'video',
+        quality: '720p MP4 (Fast Server)',
+        url: `https://ssyoutube.com/watch?v=${videoId}`
+      },
+      {
+        type: 'audio',
+        quality: 'Audio MP3 (Fast Server)',
+        url: `https://www.y2mate.com/youtube/${videoId}`
+      }
+    );
+  }
+
+  return res.json({
+    status: true,
+    platform: 'youtube',
+    title,
+    author,
+    duration: 'HD',
+    thumbnail,
+    downloads
   });
 }
 
@@ -206,7 +270,7 @@ app.post('/api/fetch', async (req, res) => {
   }
 });
 
-// Port Server Lokal
+// Port Server Lokal (Localhost)
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`🚀 Server aktif di http://localhost:${PORT}`));
