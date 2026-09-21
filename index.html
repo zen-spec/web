@@ -1,392 +1,706 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VidSnap — Download YouTube & TikTok Gratis</title>
-  <meta name="description" content="Download video YouTube dan TikTok secara gratis tanpa watermark. Pilih kualitas 1080p, 720p, 480p, 360p atau download audio MP3. Cepat, mudah, aman." />
-  <meta name="keywords" content="download youtube, download tiktok, tanpa watermark, mp4, mp3, video downloader, gratis" />
-  <meta property="og:title" content="VidSnap — Download YouTube & TikTok Gratis" />
-  <meta property="og:description" content="Download video YouTube dan TikTok gratis tanpa watermark. Pilih kualitas video sesuai keinginan." />
-  <meta property="og:type" content="website" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveTube - Download TikTok & YouTube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a0a0b0;
+            font-size: 1.1rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn.tiktok {
+            background: rgba(255, 0, 80, 0.15);
+            color: #ff0050;
+            border: 2px solid rgba(255, 0, 80, 0.3);
+        }
+
+        .tab-btn.tiktok.active {
+            background: linear-gradient(135deg, #ff0050, #00f2ea);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 5px 20px rgba(255, 0, 80, 0.4);
+        }
+
+        .tab-btn.youtube {
+            background: rgba(255, 0, 0, 0.15);
+            color: #ff0000;
+            border: 2px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .tab-btn.youtube.active {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        /* Input Section */
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            padding-right: 50px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #48dbfb;
+            box-shadow: 0 0 15px rgba(72, 219, 251, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: #666;
+        }
+
+        .paste-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(72, 219, 251, 0.2);
+            border: none;
+            color: #48dbfb;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .paste-btn:hover {
+            background: rgba(72, 219, 251, 0.4);
+        }
+
+        /* Format Selection */
+        .format-section {
+            margin-bottom: 20px;
+        }
+
+        .format-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #a0a0b0;
+            font-size: 0.9rem;
+        }
+
+        .format-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .format-option {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .format-option:hover {
+            border-color: #48dbfb;
+            color: #48dbfb;
+        }
+
+        .format-option.active {
+            border-color: #48dbfb;
+            background: rgba(72, 219, 251, 0.15);
+            color: #48dbfb;
+        }
+
+        /* Download Button */
+        .download-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .download-btn.tiktok-btn {
+            background: linear-gradient(135deg, #ff0050, #00f2ea);
+            color: #fff;
+        }
+
+        .download-btn.youtube-btn {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: #fff;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #48dbfb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Result */
+        .result {
+            display: none;
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-video {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-thumb {
+            width: 120px;
+            height: 80px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .result-info h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .result-info p {
+            color: #a0a0b0;
+            font-size: 0.85rem;
+        }
+
+        .result-downloads {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-dl-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-radius: 10px;
+            background: rgba(72, 219, 251, 0.1);
+            border: 1px solid rgba(72, 219, 251, 0.2);
+            color: #48dbfb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .result-dl-btn:hover {
+            background: rgba(72, 219, 251, 0.2);
+            transform: translateX(5px);
+        }
+
+        .result-dl-btn .quality {
+            font-weight: 600;
+        }
+
+        .result-dl-btn .size {
+            font-size: 0.85rem;
+            color: #a0a0b0;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 50px;
+            padding-bottom: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(72, 219, 251, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .feature-card p {
+            color: #a0a0b0;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .input-section {
+                padding: 20px;
+            }
+
+            .result-video {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .result-thumb {
+                width: 100%;
+                height: 120px;
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: rgba(72, 219, 251, 0.9);
+            color: #fff;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: all 0.4s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: rgba(255, 71, 87, 0.9);
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Animated Background -->
-  <div class="bg-animated">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="particles" id="particles"></div>
-  </div>
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
 
-  <!-- Navbar -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-container">
-      <a href="#" class="nav-logo" id="nav-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2z" fill="url(#logoGrad)"/>
-            <path d="M20 16l-6 4V12l6 4z" fill="white"/>
-            <path d="M16 22v3M13 23.5l3 1.5 3-1.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-            <defs>
-              <linearGradient id="logoGrad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#7C3AED"/>
-                <stop offset="1" stop-color="#C026D3"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <span class="logo-text">Vid<span class="logo-accent">Snap</span></span>
-      </a>
-      <div class="nav-links">
-        <a href="#how-to" class="nav-link" id="nav-link-howto">Cara Pakai</a>
-        <a href="#features" class="nav-link" id="nav-link-features">Fitur</a>
-        <a href="#faq" class="nav-link" id="nav-link-faq">FAQ</a>
-      </div>
+    <!-- Header -->
+    <div class="header">
+        <h1>⚡ SaveTube</h1>
+        <p>Download video TikTok & YouTube dengan mudah dan gratis</p>
     </div>
-  </nav>
 
-  <!-- Hero Section -->
-  <section class="hero" id="hero">
-    <div class="hero-content">
-      <div class="hero-badge" id="hero-badge">
-        <span class="badge-dot"></span>
-        Free · Fast · No Watermark
-      </div>
-      <h1 class="hero-title" id="hero-title">
-        Download Video<br/>
-        <span class="gradient-text">YouTube & TikTok</span>
-      </h1>
-      <p class="hero-subtitle" id="hero-subtitle">
-        Download video berkualitas tinggi secara gratis. TikTok tanpa watermark, YouTube hingga 1080p. Paste URL dan selesai!
-      </p>
-
-      <!-- Platform Tabs -->
-      <div class="platform-tabs" id="platform-tabs">
-        <button class="platform-tab active" id="tab-youtube" data-platform="youtube">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          YouTube
-        </button>
-        <button class="platform-tab" id="tab-tiktok" data-platform="tiktok">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.73a4.85 4.85 0 0 1-1.01-.04z"/></svg>
-          TikTok
-        </button>
-      </div>
-
-      <!-- URL Input -->
-      <div class="input-wrapper" id="input-wrapper">
-        <div class="input-container" id="input-container">
-          <div class="input-icon" id="input-icon-area">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
-          <input
-            type="text"
-            id="url-input"
-            class="url-input"
-            placeholder="Paste link YouTube atau TikTok di sini..."
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button class="paste-btn" id="paste-btn" title="Paste dari clipboard">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="9" y="2" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-          <button class="search-btn" id="search-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-            Ambil Info
-          </button>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn tiktok active" onclick="switchTab('tiktok')">
+                🎵 TikTok
+            </button>
+            <button class="tab-btn youtube" onclick="switchTab('youtube')">
+                ▶️ YouTube
+            </button>
         </div>
-        <div class="input-hint" id="input-hint">
-          Contoh: https://www.youtube.com/watch?v=... atau https://www.tiktok.com/@...
-        </div>
-      </div>
 
-      <!-- Error Message -->
-      <div class="error-msg" id="error-msg" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="error-text">Terjadi kesalahan</span>
-      </div>
-
-      <!-- Loading State -->
-      <div class="loading-state" id="loading-state" style="display:none;">
-        <div class="loading-spinner">
-          <div class="spinner-ring"></div>
-          <div class="spinner-ring"></div>
-          <div class="spinner-ring"></div>
-        </div>
-        <p id="loading-text">Mengambil info video...</p>
-      </div>
-
-      <!-- Video Info Card -->
-      <div class="video-card" id="video-card" style="display:none;">
-        <div class="video-card-inner">
-          <div class="video-thumbnail-wrap" id="video-thumbnail-wrap">
-            <img class="video-thumbnail" id="video-thumbnail" src="" alt="Thumbnail" />
-            <div class="thumbnail-overlay">
-              <div class="play-icon">
-                <svg viewBox="0 0 24 24" fill="white" width="32" height="32"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </div>
-            </div>
-            <div class="platform-badge" id="platform-badge-img"></div>
-          </div>
-          <div class="video-info">
-            <h3 class="video-title" id="video-title-display">Loading...</h3>
-            <div class="video-meta" id="video-meta">
-              <span class="meta-item" id="meta-duration">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span id="meta-duration-text">-</span>
-              </span>
-              <span class="meta-item" id="meta-author">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span id="meta-author-text">-</span>
-              </span>
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="Tempel link TikTok di sini...">
+                <button class="paste-btn" onclick="pasteFromClipboard()">📋 Paste</button>
             </div>
 
-            <!-- Quality Selector -->
-            <div class="quality-section" id="quality-section">
-              <label class="quality-label">Pilih Kualitas:</label>
-              <div class="quality-options" id="quality-options">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-
-            <!-- Download Progress -->
-            <div class="progress-section" id="progress-section" style="display:none;">
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" id="progress-bar">
-                  <div class="progress-fill" id="progress-fill"></div>
-                  <div class="progress-glow"></div>
+            <!-- Format Selection -->
+            <div class="format-section" id="formatSection">
+                <label>Pilih Format:</label>
+                <div class="format-options">
+                    <div class="format-option active" onclick="selectFormat(this, 'mp4')">MP4 (Video)</div>
+                    <div class="format-option" onclick="selectFormat(this, 'mp3')">MP3 (Audio)</div>
+                    <div class="format-option" onclick="selectFormat(this, 'hd')">HD 1080p</div>
                 </div>
-                <span class="progress-pct" id="progress-pct">0%</span>
-              </div>
-              <p class="progress-status" id="progress-status">Memproses video...</p>
             </div>
 
             <!-- Download Button -->
-            <button class="download-btn" id="download-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span id="download-btn-text">Download Sekarang</span>
+            <button class="download-btn tiktok-btn" id="downloadBtn" onclick="processDownload()">
+                ⬇️ Download Sekarang
             </button>
-          </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section" id="stats-section">
-    <div class="container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-number" id="stat-1" data-target="10000000">0</span>
-          <span class="stat-label">Video Didownload</span>
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Memproses video...</p>
         </div>
-        <div class="stat-item">
-          <span class="stat-number" id="stat-2" data-target="500000">0</span>
-          <span class="stat-label">Pengguna Aktif</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="stat-3" data-target="99">0</span>
-          <span class="stat-label">% Uptime</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="stat-4" data-target="0">∞</span>
-          <span class="stat-label">Biaya (Gratis!)</span>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- How To Section -->
-  <section class="how-to-section" id="how-to">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Cara Menggunakan</h2>
-        <p class="section-subtitle">Hanya 3 langkah mudah untuk download video favorit kamu</p>
-      </div>
-      <div class="steps-grid">
-        <div class="step-card" id="step-card-1">
-          <div class="step-number">01</div>
-          <div class="step-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
-          <h3>Salin Link Video</h3>
-          <p>Copy URL video dari YouTube atau TikTok yang ingin kamu download.</p>
-        </div>
-        <div class="step-card" id="step-card-2">
-          <div class="step-number">02</div>
-          <div class="step-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><rect x="9" y="2" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </div>
-          <h3>Paste & Proses</h3>
-          <p>Paste link di kotak input di atas, lalu klik tombol "Ambil Info".</p>
-        </div>
-        <div class="step-card" id="step-card-3">
-          <div class="step-number">03</div>
-          <div class="step-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </div>
-          <h3>Pilih & Download</h3>
-          <p>Pilih kualitas video yang kamu inginkan, lalu klik download!</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="features-section" id="features">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Fitur Unggulan</h2>
-        <p class="section-subtitle">Semua yang kamu butuhkan dalam satu platform</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card" id="feat-1">
-          <div class="feature-icon feat-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          </div>
-          <h3>Kualitas Tinggi</h3>
-          <p>Download YouTube hingga resolusi 1080p Full HD tanpa penurunan kualitas.</p>
-        </div>
-        <div class="feature-card" id="feat-2">
-          <div class="feature-icon feat-pink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>Tanpa Watermark</h3>
-          <p>Download video TikTok bersih tanpa watermark logo TikTok sama sekali.</p>
-        </div>
-        <div class="feature-card" id="feat-3">
-          <div class="feature-icon feat-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          </div>
-          <h3>Super Cepat</h3>
-          <p>Server bertenaga tinggi memastikan proses download berjalan secepat mungkin.</p>
-        </div>
-        <div class="feature-card" id="feat-4">
-          <div class="feature-icon feat-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          </div>
-          <h3>100% Gratis</h3>
-          <p>Tidak ada biaya tersembunyi, tidak perlu daftar akun. Langsung pakai!</p>
-        </div>
-        <div class="feature-card" id="feat-5">
-          <div class="feature-icon feat-orange">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          </div>
-          <h3>Mobile Friendly</h3>
-          <p>Tampilan responsif, bisa digunakan dengan nyaman di HP maupun PC.</p>
-        </div>
-        <div class="feature-card" id="feat-6">
-          <div class="feature-icon feat-teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M9 19V6l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/></svg>
-          </div>
-          <h3>Download Audio MP3</h3>
-          <p>Ekstrak audio dari video YouTube dalam format MP3 berkualitas tinggi.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="faq-section" id="faq">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Pertanyaan Umum</h2>
-        <p class="section-subtitle">Jawaban atas pertanyaan yang sering ditanyakan</p>
-      </div>
-      <div class="faq-list" id="faq-list">
-        <div class="faq-item" id="faq-1">
-          <button class="faq-question" id="faq-q-1">
-            Apakah VidSnap gratis sepenuhnya?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="faq-answer">Ya! VidSnap 100% gratis tanpa biaya apapun. Kamu tidak perlu mendaftar atau memasukkan data kartu kredit.</div>
-        </div>
-        <div class="faq-item" id="faq-2">
-          <button class="faq-question" id="faq-q-2">
-            Apakah bisa download TikTok tanpa watermark?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="faq-answer">Ya! VidSnap secara otomatis menghapus watermark TikTok saat kamu download video. Hasilnya bersih tanpa logo apapun.</div>
-        </div>
-        <div class="faq-item" id="faq-3">
-          <button class="faq-question" id="faq-q-3">
-            Kualitas video apa saja yang tersedia?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="faq-answer">Untuk YouTube, tersedia pilihan 144p, 360p, 480p, 720p HD, dan 1080p Full HD. Untuk TikTok, video didownload dalam kualitas terbaik yang tersedia.</div>
-        </div>
-        <div class="faq-item" id="faq-4">
-          <button class="faq-question" id="faq-q-4">
-            Apakah ada batasan jumlah download?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="faq-answer">Tidak ada batasan! Kamu bisa download sebanyak yang kamu mau setiap hari tanpa batas.</div>
-        </div>
-        <div class="faq-item" id="faq-5">
-          <button class="faq-question" id="faq-q-5">
-            Apakah data saya aman?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="faq-answer">Kami tidak menyimpan link atau data pribadi kamu. Semua proses berjalan secara real-time dan langsung.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer" id="footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <a href="#" class="nav-logo">
-            <div class="logo-icon">
-              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2z" fill="url(#logoGrad2)"/>
-                <path d="M20 16l-6 4V12l6 4z" fill="white"/>
-                <path d="M16 22v3M13 23.5l3 1.5 3-1.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                <defs>
-                  <linearGradient id="logoGrad2" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#7C3AED"/>
-                    <stop offset="1" stop-color="#C026D3"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+        <!-- Result -->
+        <div class="result" id="result">
+            <div class="result-video">
+                <div class="result-thumb" id="resultThumb">🎬</div>
+                <div class="result-info">
+                    <h3 id="resultTitle">Video Title</h3>
+                    <p id="resultDuration">⏱ 0:00 • 👁 1.2M views</p>
+                </div>
             </div>
-            <span class="logo-text">Vid<span class="logo-accent">Snap</span></span>
-          </a>
-          <p class="footer-desc">Platform download video YouTube dan TikTok tercepat dan termudah. Gratis selamanya.</p>
+            <div class="result-downloads" id="resultDownloads">
+                <!-- Dynamic download links -->
+            </div>
         </div>
-        <div class="footer-links-group">
-          <h4>Platform</h4>
-          <a href="#">YouTube Downloader</a>
-          <a href="#">TikTok Downloader</a>
-          <a href="#">MP3 Downloader</a>
+
+        <!-- Features -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Super Cepat</h3>
+                <p>Proses download cepat tanpa menunggu lama</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Aman & Privat</h3>
+                <p>Tidak menyimpan data atau riwayat download</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h3>Kualitas Tinggi</h3>
+                <p>Download dalam kualitas HD hingga 1080p</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Semua Perangkat</h3>
+                <p>Bisa digunakan di HP, tablet, maupun PC</p>
+            </div>
         </div>
-        <div class="footer-links-group">
-          <h4>Informasi</h4>
-          <a href="#how-to">Cara Pakai</a>
-          <a href="#faq">FAQ</a>
-          <a href="#">Kebijakan Privasi</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>© 2026 VidSnap. Dibuat dengan ❤️ untuk pengguna Indonesia.</p>
-        <p class="footer-disclaimer">Hanya untuk penggunaan pribadi. Hormati hak cipta konten.</p>
-      </div>
     </div>
-  </footer>
 
-  <!-- Toast Notification -->
-  <div class="toast" id="toast">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
-    <span id="toast-text">Link berhasil di-paste!</span>
-  </div>
+    <!-- Footer -->
+    <div class="footer">
+        <p>© 2024 SaveTube - Gratis & Tanpa Iklan</p>
+        <p style="margin-top: 5px;">Tidak berafiliasi dengan TikTok atau YouTube</p>
+    </div>
 
-  <script src="js/app.js"></script>
+    <script>
+        let currentTab = 'tiktok';
+        let selectedFormat = 'mp4';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn.${tab}`).classList.add('active');
+
+            // Update placeholder
+            const input = document.getElementById('urlInput');
+            if (tab === 'tiktok') {
+                input.placeholder = 'Tempel link TikTok di sini...';
+                document.getElementById('downloadBtn').className = 'download-btn tiktok-btn';
+            } else {
+                input.placeholder = 'Tempel link YouTube di sini...';
+                document.getElementById('downloadBtn').className = 'download-btn youtube-btn';
+            }
+
+            // Update format options
+            updateFormatOptions();
+
+            // Hide result
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function updateFormatOptions() {
+            const formatSection = document.getElementById('formatSection');
+            if (currentTab === 'tiktok') {
+                formatSection.innerHTML = `
+                    <label>Pilih Format:</label>
+                    <div class="format-options">
+                        <div class="format-option active" onclick="selectFormat(this, 'mp4')">MP4 (Video)</div>
+                        <div class="format-option" onclick="selectFormat(this, 'mp3')">MP3 (Audio)</div>
+                        <div class="format-option" onclick="selectFormat(this, 'hd')">HD 1080p</div>
+                    </div>
+                `;
+            } else {
+                formatSection.innerHTML = `
+                    <label>Pilih Format:</label>
+                    <div class="format-options">
+                        <div class="format-option active" onclick="selectFormat(this, 'mp4')">MP4 720p</div>
+                        <div class="format-option" onclick="selectFormat(this, '1080p')">MP4 1080p</div>
+                        <div class="format-option" onclick="selectFormat(this, 'mp3')">MP3 Audio</div>
+                        <div class="format-option" onclick="selectFormat(this, 'webm')">WebM</div>
+                    </div>
+                `;
+            }
+            selectedFormat = 'mp4';
+        }
+
+        function selectFormat(element, format) {
+            document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            selectedFormat = format;
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('urlInput').value = text;
+                showNotification('Link berhasil ditempel!');
+            } catch (err) {
+                showNotification('Gagal membaca clipboard. Tempel manual ya!', true);
+            }
+        }
+
+        function processDownload() {
+            const url = document.getElementById('urlInput').value.trim();
+            
+            if (!url) {
+                showNotification('Masukkan link terlebih dahulu!', true);
+                return;
+            }
+
+            // Validate URL
+            if (currentTab === 'tiktok' && !url.includes('tiktok.com')) {
+                showNotification('Masukkan link TikTok yang valid!', true);
+                return;
+            }
+            if (currentTab === 'youtube' && !url.includes('youtube.com') && !url.includes('youtu.be')) {
+                showNotification('Masukkan link YouTube yang valid!', true);
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+
+            // Simulate processing (in real app, this would call an API)
+            setTimeout(() => {
+                document.getElementById('loading').classList.remove('show');
+                showResult(url);
+            }, 2500);
+        }
+
+        function showResult(url) {
+            const result = document.getElementById('result');
+            const title = document.getElementById('resultTitle');
+            const duration = document.getElementById('resultDuration');
+            const thumb = document.getElementById('resultThumb');
+            const downloads = document.getElementById('resultDownloads');
+
+            if (currentTab === 'tiktok') {
+                title.textContent = 'TikTok Video - @creator';
+                duration.textContent = '⏱ 0:30 • ❤️ 45.2K likes';
+                thumb.textContent = '🎵';
+                downloads.innerHTML = `
+                    <div class="result-dl-btn" onclick="downloadFile('video_no_wm')">
+                        <span class="quality">📹 Video Tanpa Watermark</span>
+                        <span class="size">~8.5 MB</span>
+                    </div>
+                    <div class="result-dl-btn" onclick="downloadFile('video_wm')">
+                        <span class="quality">📹 Video + Watermark</span>
+                        <span class="size">~9.2 MB</span>
+                    </div>
+                    <div class="result-dl-btn" onclick="downloadFile('audio')">
+                        <span class="quality">🎵 Audio MP3</span>
+                        <span class="size">~2.1 MB</span>
+                    </div>
+                `;
+            } else {
+                title.textContent = 'YouTube Video - Example Title';
+                duration.textContent = '⏱ 12:34 • 👁 2.5M views';
+                thumb.textContent = '▶️';
+                downloads.innerHTML = `
+                    <div class="result-dl-btn" onclick="downloadFile('720p')">
+                        <span class="quality">📹 MP4 720p</span>
+                        <span class="size">~45 MB</span>
+                    </div>
+                    <div class="result-dl-btn" onclick="downloadFile('1080p')">
+                        <span class="quality">📹 MP4 1080p Full HD</span>
+                        <span class="size">~120 MB</span>
+                    </div>
+                    <div class="result-dl-btn" onclick="downloadFile('mp3')">
+                        <span class="quality">🎵 MP3 Audio 320kbps</span>
+                        <span class="size">~12 MB</span>
+                    </div>
+                    <div class="result-dl-btn" onclick="downloadFile('webm')">
+                        <span class="quality">📹 WebM 1080p</span>
+                        <span class="size">~95 MB</span>
+                    </div>
+                `;
+            }
+
+            result.classList.add('show');
+            showNotification('Video berhasil diproses!');
+        }
+
+        function downloadFile(type) {
+            showNotification(`Memulai download ${type.toUpperCase()}...`);
+            
+            // In a real application, this would trigger the actual download
+            // For demo purposes, we'll show a notification
+            setTimeout(() => {
+                showNotification('Download dimulai! Cek folder download Anda.');
+            }, 1000);
+        }
+
+        function showNotification(message, isError = false) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = 'notification' + (isError ? ' error' : '');
+            
+            setTimeout(() => notif.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                processDownload();
+            }
+        });
+    </script>
 </body>
 </html>
