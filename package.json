@@ -1,14 +1,8 @@
 {
-  "name": "my-downloader",
+  "name": "snapsave-scrapr-hub",
   "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "main": "index.html",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "@distube/ytdl-core": "^4.14.4",
-    "@tobyg74/tiktok-api-dl": "^1.2.5"
+    "scrapr": "git+https://github.com/coflyn/scrapr.git"
   }
 }
