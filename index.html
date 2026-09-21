@@ -846,31 +846,36 @@
     }
 
     async function downloadVideo() {
-      const url = document.getElementById('videoUrl').value.trim();
-
-      if (!url) {
-        showToast('❌ Masukkan link video terlebih dahulu!');
-        return;
-      }
-
-      if (!validateUrl(url)) {
-        showToast(`❌ Link tidak valid untuk ${currentPlatform}!`);
-        return;
-      }
-
-      const loading = document.getElementById('loading');
-      const result = document.getElementById('result');
-
-      loading.classList.add('active');
-      result.classList.remove('active');
-
-      // Simulasi proses
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      loading.classList.remove('active');
-
-      // Tampilkan hasil
-      showResult(url);
+        const url = document.getElementById('videoUrl').value.trim();
+        
+        if (!url) {
+            showToast('❌ Masukkan link video!');
+            return;
+        }
+        
+        const loading = document.getElementById('loading');
+        loading.classList.add('active');
+        
+        try {
+            // 1. Ambil info video dulu
+            const infoRes = await fetch('http://localhost:5000/api/info', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: url})
+            });
+            
+            const info = await infoRes.json();
+            
+            if (info.status === 'success') {
+                showResult(info);
+            } else {
+                showToast('❌ ' + info.error);
+            }
+        } catch (error) {
+            showToast('❌ Error: ' + error.message);
+        } finally {
+            loading.classList.remove('active');
+        }
     }
 
     function showResult(url) {
