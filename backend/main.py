@@ -5,17 +5,33 @@ FastAPI + yt-dlp untuk download YouTube & TikTok
 
 Endpoint:
   POST /api/info          → Ambil info video (title, thumbnail, formats)
-  POST /api/download-url  → Dapatkan URL download langsung
+  POST /api/download-url  → Dapatkan URL download langsung (dari yt-dlp)
+  GET  /api/stream        → Proxy download file (WAJIB dipakai untuk TikTok,
+                             karena CDN TikTok menolak hotlink langsung dari
+                             browser user / 403 Forbidden Varnish)
 
 Deploy ke Railway / Render / VPS
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import yt_dlp
+import httpx
 import re
 import os
+
+# Referer wajib disertakan saat mengambil file dari CDN masing-masing
+# platform, kalau tidak CDN (terutama TikTok) akan menolak dengan 403.
+REFERER_MAP = {
+    "youtube": "https://www.youtube.com/",
+    "tiktok": "https://www.tiktok.com/",
+}
+DOWNLOAD_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+)
 
 # ============================================================
 # APP SETUP
@@ -326,3 +342,59 @@ async def get_download_url(req: DownloadUrlRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)[:200]}")
+
+# ----------------------------------------------------------
+# PROXY DOWNLOAD (WAJIB untuk TikTok — hindari 403 dari CDN)
+# ----------------------------------------------------------
+@app.get("/api/stream")
+async def stream_download(media_url: str, platform: str = "youtube", filename: str = "video", ext: str = "mp4"):
+    """
+    Backend yang fetch file dari CDN sumber (dengan Referer/User-Agent yang
+    benar), lalu stream ke user. Ini menghindari 403 Forbidden yang muncul
+    kalau browser user langsung request ke CDN TikTok/YouTube tanpa header
+    yang sesuai (CDN mereka menolak hotlink telanjang).
+    """
+    platform = platform.lower()
+    headers = {
+        "User-Agent": DOWNLOAD_USER_AGENT,
+        "Referer": REFERER_MAP.get(platform, "https://www.google.com/"),
+    }
+
+    client = httpx.AsyncClient(follow_redirects=True, timeout=60.0)
+    try:
+        req = client.build_request("GET", media_url, headers=headers)
+        resp = await client.send(req, stream=True)
+    except httpx.RequestError as e:
+        await client.aclose()
+        raise HTTPException(status_code=502, detail=f"Gagal menghubungi server sumber video: {str(e)[:150]}")
+
+    if resp.status_code >= 400:
+        await resp.aclose()
+        await client.aclose()
+        raise HTTPException(
+            status_code=422,
+            detail=f"CDN sumber menolak download (HTTP {resp.status_code}). Link mungkin sudah kedaluwarsa — coba Ambil Info ulang."
+        )
+
+    safe_name = re.sub(r'[<>:"/\\|?*]', '', filename)[:80].strip() or "vidsnap"
+
+    async def body_iterator():
+        try:
+            async for chunk in resp.aiter_bytes(chunk_size=65536):
+                yield chunk
+        finally:
+            await resp.aclose()
+            await client.aclose()
+
+    # CATATAN: sengaja TIDAK meneruskan header Content-Length dari CDN sumber.
+    # httpx men-dekompres body otomatis (mis. gzip/br) di aiter_bytes, jadi
+    # ukuran body yang benar-benar dikirim bisa beda dari Content-Length asli
+    # → kalau dipaksa diteruskan, uvicorn crash "Response content longer than
+    # Content-Length". Biarkan FastAPI pakai chunked transfer encoding.
+    resp_headers = {"Content-Disposition": f'attachment; filename="{safe_name}.{ext}"'}
+
+    return StreamingResponse(
+        body_iterator(),
+        media_type=resp.headers.get("content-type", "application/octet-stream"),
+        headers=resp_headers,
+    )
