@@ -24,7 +24,7 @@ function extractYTId(url) {
 }
 
 // ------------------------------------------
-// 1. TIKTOK HANDLER (TikWM Engine - Fast & Stable)
+// 1. TIKTOK HANDLER (TikWM Engine - Fast)
 // ------------------------------------------
 async function handleTikTok(url, res) {
   try {
@@ -32,24 +32,15 @@ async function handleTikTok(url, res) {
     const json = await response.json();
 
     if (!json || json.code !== 0) {
-      return res.status(400).json({ 
-        status: false, 
-        message: 'Gagal mengekstrak video TikTok. Pastikan link publik dan valid.' 
-      });
+      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan akun tidak diprivate.' });
     }
 
     const data = json.data;
     const downloads = [];
 
-    if (data.play) {
-      downloads.push({ type: 'video', quality: 'No Watermark (HD)', url: data.play });
-    }
-    if (data.wmplay) {
-      downloads.push({ type: 'video', quality: 'With Watermark', url: data.wmplay });
-    }
-    if (data.music) {
-      downloads.push({ type: 'audio', quality: 'Audio Original (MP3)', url: data.music });
-    }
+    if (data.play) downloads.push({ type: 'video', quality: 'No Watermark (HD)', url: data.play });
+    if (data.wmplay) downloads.push({ type: 'video', quality: 'With Watermark', url: data.wmplay });
+    if (data.music) downloads.push({ type: 'audio', quality: 'Audio Original (MP3)', url: data.music });
 
     return res.json({
       status: true,
@@ -61,16 +52,12 @@ async function handleTikTok(url, res) {
       downloads
     });
   } catch (err) {
-    console.error('TikTok API Error:', err);
-    return res.status(500).json({ 
-      status: false, 
-      message: 'Gagal terhubung ke server TikTok. Silakan coba lagi.' 
-    });
+    return res.status(500).json({ status: false, message: 'Gagal memproses TikTok dari server.' });
   }
 }
 
 // ------------------------------------------
-// 2. YOUTUBE HANDLER (Anti-Block & Fast Response)
+// 2. YOUTUBE HANDLER (Official oEmbed - Guaranteed Vercel Success)
 // ------------------------------------------
 async function handleYouTube(url, res) {
   const videoId = extractYTId(url);
@@ -78,63 +65,55 @@ async function handleYouTube(url, res) {
     return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
   }
 
-  const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-  const downloads = [];
-
-  // 1. Coba ambil Direct Stream MP4 via Cobalt API
   try {
-    const cobaltRes = await fetch('https://api.cobalt.tools/api/json', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    // Ambil Judul & Author via YouTube oEmbed Resmi (Bebas Blokir IP Vercel)
+    const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+    const oembedRes = await fetch(oembedUrl);
+
+    let title = `YouTube Video (${videoId})`;
+    let author = 'YouTube Content Creator';
+
+    if (oembedRes.ok) {
+      const oembedData = await oembedRes.json();
+      if (oembedData.title) title = oembedData.title;
+      if (oembedData.author_name) author = oembedData.author_name;
+    }
+
+    const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    // Link download langsung yang kompatibel untuk browser user
+    const downloads = [
+      {
+        type: 'video',
+        quality: 'Download MP4 (Server 1)',
+        url: `https://ssyoutube.com/watch?v=${videoId}`
       },
-      body: JSON.stringify({ url: url, vQuality: '720' })
+      {
+        type: 'audio',
+        quality: 'Download MP3 (Server 2)',
+        url: `https://yt1s.de/en/youtube-to-mp3?q=${encodeURIComponent(cleanUrl)}`
+      },
+      {
+        type: 'video',
+        quality: 'Alternative Downloader (Cobalt)',
+        url: `https://cobalt.tools`
+      }
+    ];
+
+    return res.json({
+      status: true,
+      platform: 'youtube',
+      title: title,
+      author: author,
+      duration: 'HD Quality',
+      thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      downloads: downloads
     });
 
-    if (cobaltRes.ok) {
-      const cobaltData = await cobaltRes.json();
-      if (cobaltData && cobaltData.url) {
-        downloads.push({
-          type: 'video',
-          quality: '720p MP4 (Direct Stream)',
-          url: cobaltData.url
-        });
-      }
-    }
   } catch (err) {
-    // Abaikan jika Cobalt timeout/diblokir oleh YouTube di Vercel
+    console.error('YouTube Fetch Error:', err);
+    return res.status(500).json({ status: false, message: 'Gagal memproses video YouTube.' });
   }
-
-  // 2. Opsi Unduhan Cadangan (Bypass Blokir IP Vercel)
-  downloads.push(
-    {
-      type: 'video',
-      quality: 'Download MP4 (Fast Server 1)',
-      url: `https://ssyoutube.com/watch?v=${videoId}`
-    },
-    {
-      type: 'audio',
-      quality: 'Download MP3 (Fast Server 2)',
-      url: `https://www.y2mate.com/youtube/${videoId}`
-    },
-    {
-      type: 'video',
-      quality: 'Cobalt Downloader Web',
-      url: `https://cobalt.tools`
-    }
-  );
-
-  return res.json({
-    status: true,
-    platform: 'youtube',
-    title: `YouTube Video (${videoId})`,
-    author: 'YouTube Content',
-    duration: 'N/A',
-    thumbnail: thumbnail,
-    downloads: downloads
-  });
 }
 
 // Endpoint Utama API
