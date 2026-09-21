@@ -1,14 +1,13 @@
 """
 VidSnap Backend API
-===================
 FastAPI + yt-dlp untuk download YouTube & TikTok
 
 Endpoint:
-  POST /api/info          → Ambil info video (title, thumbnail, formats)
-  POST /api/download-url  → Dapatkan URL download langsung (dari yt-dlp)
-  GET  /api/stream        → Proxy download file (WAJIB dipakai untuk TikTok,
-                             karena CDN TikTok menolak hotlink langsung dari
-                             browser user / 403 Forbidden Varnish)
+POST /api/info          → Ambil info video (title, thumbnail, formats)
+POST /api/download-url  → Dapatkan URL download langsung (dari yt-dlp)
+GET  /api/stream        → Proxy download file (WAJIB dipakai untuk TikTok,
+                          karena CDN TikTok menolak hotlink langsung dari
+                          browser user / 403 Forbidden Varnish)
 
 Deploy ke Railway / Render / VPS
 """
@@ -18,7 +17,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import yt_dlp
-import httpx
 import re
 import os
 
@@ -28,6 +26,7 @@ REFERER_MAP = {
     "youtube": "https://www.youtube.com/",
     "tiktok": "https://www.tiktok.com/",
 }
+
 DOWNLOAD_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
@@ -68,9 +67,9 @@ class DownloadUrlRequest(BaseModel):
 # ============================================================
 def is_valid_url(url: str, platform: str) -> bool:
     if platform == "youtube":
-        return bool(re.search(r'(youtube\.com|youtu\.be)', url, re.I))
+        return bool(re.search(r'(youtube.com|youtu.be)', url, re.I))
     elif platform == "tiktok":
-        return bool(re.search(r'(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com)', url, re.I))
+        return bool(re.search(r'(tiktok.com|vm.tiktok.com|vt.tiktok.com)', url, re.I))
     return False
 
 def format_duration(seconds: int) -> str:
@@ -109,10 +108,10 @@ def build_ydl_opts(platform: str, format_str: str = None) -> dict:
         }
     elif platform == "tiktok":
         opts["format"] = "download_addr-0/best"
-
+        
     if format_str:
         opts["format"] = format_str
-
+        
     # Dukungan cookies jika user menyediakan cookies.txt atau environment variable
     cookie_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
     if os.path.exists(cookie_path):
@@ -125,13 +124,12 @@ def build_ydl_opts(platform: str, format_str: str = None) -> dict:
             opts["cookiefile"] = temp_cookie
         except Exception:
             pass
-
+            
     return opts
 
 def explain_download_error(e: Exception) -> str:
     """Ubah error mentah yt-dlp jadi pesan yang jelas & actionable untuk user."""
     error_msg = str(e)
-
     if "Private video" in error_msg:
         return "Video bersifat private dan tidak dapat diakses."
     if "Video unavailable" in error_msg:
@@ -139,11 +137,6 @@ def explain_download_error(e: Exception) -> str:
     if "This video is not available" in error_msg or "geo" in error_msg.lower():
         return "Video tidak tersedia di lokasi server (kemungkinan dibatasi wilayah/geo-blocked)."
     if "Sign in to confirm" in error_msg or "confirm you're not a bot" in error_msg or "Sign in" in error_msg:
-        # Ini BUKAN soal video tertentu — YouTube mendeteksi IP server cloud
-        # (Railway/Render dsb) sebagai bot dan meminta verifikasi login.
-        # Satu-satunya perbaikan yang stabil adalah menyuplai cookies dari
-        # akun YouTube yang sudah login (lihat README bagian "Mengatasi
-        # error verifikasi login/bot").
         return (
             "YouTube meminta verifikasi login karena IP server ini terdeteksi sebagai bot "
             "(masalah umum di hosting cloud seperti Railway/Render, bukan soal video/link "
@@ -177,7 +170,6 @@ def get_youtube_formats(info: dict) -> list:
             if abs(fh - h) <= 50 and f.get("ext") in ["mp4", "webm"]:
                 if best_match is None or (f.get("filesize") or 0) > (best_match.get("filesize") or 0):
                     best_match = f
-
         if best_match and best_match.get("format_id") not in seen:
             seen.add(best_match["format_id"])
             result.append({
@@ -234,7 +226,6 @@ async def get_video_info(req: VideoInfoRequest):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-
             if not info:
                 raise HTTPException(status_code=404, detail="Video tidak ditemukan.")
 
@@ -291,12 +282,10 @@ async def get_download_url(req: DownloadUrlRequest):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-
             if not info:
                 raise HTTPException(status_code=404, detail="Video tidak ditemukan.")
 
             download_url = None
-
             if "url" in info:
                 download_url = info["url"]
             elif "requested_formats" in info:
@@ -345,56 +334,42 @@ async def get_download_url(req: DownloadUrlRequest):
 
 # ----------------------------------------------------------
 # PROXY DOWNLOAD (WAJIB untuk TikTok — hindari 403 dari CDN)
+# Menggunakan yt-dlp internal opener untuk bypass TLS fingerprinting CDN.
 # ----------------------------------------------------------
 @app.get("/api/stream")
 async def stream_download(media_url: str, platform: str = "youtube", filename: str = "video", ext: str = "mp4"):
     """
-    Backend yang fetch file dari CDN sumber (dengan Referer/User-Agent yang
-    benar), lalu stream ke user. Ini menghindari 403 Forbidden yang muncul
-    kalau browser user langsung request ke CDN TikTok/YouTube tanpa header
-    yang sesuai (CDN mereka menolak hotlink telanjang).
+    Proxy download menggunakan internal opener yt-dlp.
+    Ini menghindari 403 Forbidden karena menggunakan TLS fingerprint,
+    headers, dan cookies yang SAMA PERSIS dengan yang digunakan yt-dlp
+    saat mengambil info video. httpx sering diblokir oleh CDN TikTok
+    karena TLS fingerprint-nya terdeteksi sebagai bot dari IP Datacenter.
     """
-    platform = platform.lower()
-    headers = {
-        "User-Agent": DOWNLOAD_USER_AGENT,
-        "Referer": REFERER_MAP.get(platform, "https://www.google.com/"),
-    }
-
-    client = httpx.AsyncClient(follow_redirects=True, timeout=60.0)
-    try:
-        req = client.build_request("GET", media_url, headers=headers)
-        resp = await client.send(req, stream=True)
-    except httpx.RequestError as e:
-        await client.aclose()
-        raise HTTPException(status_code=502, detail=f"Gagal menghubungi server sumber video: {str(e)[:150]}")
-
-    if resp.status_code >= 400:
-        await resp.aclose()
-        await client.aclose()
-        raise HTTPException(
-            status_code=422,
-            detail=f"CDN sumber menolak download (HTTP {resp.status_code}). Link mungkin sudah kedaluwarsa — coba Ambil Info ulang."
-        )
-
     safe_name = re.sub(r'[<>:"/\\|?*]', '', filename)[:80].strip() or "vidsnap"
-
-    async def body_iterator():
-        try:
-            async for chunk in resp.aiter_bytes(chunk_size=65536):
-                yield chunk
-        finally:
-            await resp.aclose()
-            await client.aclose()
-
-    # CATATAN: sengaja TIDAK meneruskan header Content-Length dari CDN sumber.
-    # httpx men-dekompres body otomatis (mis. gzip/br) di aiter_bytes, jadi
-    # ukuran body yang benar-benar dikirim bisa beda dari Content-Length asli
-    # → kalau dipaksa diteruskan, uvicorn crash "Response content longer than
-    # Content-Length". Biarkan FastAPI pakai chunked transfer encoding.
     resp_headers = {"Content-Disposition": f'attachment; filename="{safe_name}.{ext}"'}
 
+    ydl_opts = build_ydl_opts(platform)
+    ydl_opts['skip_download'] = True  # Pastikan tidak mendownload ke disk server
+
+    def iterfile():
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # ydl.urlopen() menggunakan urllib internal yt-dlp.
+                # Ini SANGAT PENTING untuk TikTok karena menggunakan TLS fingerprint
+                # yang sama persis dengan saat yt-dlp mengambil URL video.
+                res = ydl.urlopen(media_url)
+                
+                while True:
+                    chunk = res.read(65536)  # Baca per 64KB
+                    if not chunk:
+                        break
+                    yield chunk
+        except Exception as e:
+            print(f"[Stream Error] {e}")
+            yield b""  # Yield kosong jika terjadi error agar tidak crash
+
     return StreamingResponse(
-        body_iterator(),
-        media_type=resp.headers.get("content-type", "application/octet-stream"),
-        headers=resp_headers,
+        iterfile(),
+        media_type="video/mp4" if ext == "mp4" else "audio/mpeg",
+        headers=resp_headers
     )
