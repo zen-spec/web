@@ -4,7 +4,7 @@
 
 // ---- Config ----
 // Ganti dengan URL backend kamu setelah deploy ke Railway/Render
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://nano-1.nura.host:5119';
 
 // ---- State ----
 let currentPlatform = 'youtube';
