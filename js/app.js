@@ -337,12 +337,23 @@ downloadBtn.addEventListener('click', async () => {
 
     await sleep(600);
 
-    // Trigger download
+    // Trigger download — LEWAT PROXY backend (/api/stream), BUKAN link CDN
+    // langsung. TikTok/YouTube CDN sering menolak (403) request langsung
+    // dari browser user karena tidak ada header Referer yang sesuai, jadi
+    // backend yang mengambilkan filenya lalu meneruskan ke browser.
     if (data.download_url) {
+      const filename = sanitizeFilename(currentVideoInfo.title || 'vidsnap');
+      const ext = selectedQuality.ext || 'mp4';
+      const proxyUrl = `${API_BASE_URL}/api/stream?` + new URLSearchParams({
+        media_url: data.download_url,
+        platform: currentPlatform,
+        filename,
+        ext
+      }).toString();
+
       const a = document.createElement('a');
-      a.href = data.download_url;
-      a.download = sanitizeFilename(currentVideoInfo.title || 'vidsnap') + '.' + (selectedQuality.ext || 'mp4');
-      a.target = '_blank';
+      a.href = proxyUrl;
+      a.download = `${filename}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
