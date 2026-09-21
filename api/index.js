@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const Tiktok = require('@maxinminax/tiktok-api-dl');
-const yt = require('@vreden/youtube_scraper');
 
 const app = express();
 
@@ -15,109 +13,145 @@ function detectPlatform(url) {
   return null;
 }
 
-// YouTube Scraper Handler
-async function handleYouTube(url, res) {
-  try {
-    const [meta, mp4Data, mp3Data] = await Promise.allSettled([
-      yt.metadata(url),
-      yt.ytmp4(url, 720),
-      yt.ytmp3(url, 320)
-    ]);
-
-    const metadata = meta.status === 'fulfilled' ? meta.value : null;
-    const mp4 = mp4Data.status === 'fulfilled' ? mp4Data.value : null;
-    const mp3 = mp3Data.status === 'fulfilled' ? mp3Data.value : null;
-
-    if (!metadata && !mp4 && !mp3) {
-      return res.status(400).json({ status: false, message: 'Gagal mengambil data dari YouTube.' });
-    }
-
-    const responseData = {
-      status: true,
-      platform: 'youtube',
-      title: metadata?.title || mp4?.metadata?.title || 'YouTube Video',
-      author: metadata?.author?.name || mp4?.metadata?.author || 'Unknown Uploader',
-      duration: metadata?.duration || 'N/A',
-      thumbnail: metadata?.thumbnail || mp4?.metadata?.thumbnails?.[0]?.url || '',
-      downloads: []
-    };
-
-    if (mp4 && mp4.download?.url) {
-      responseData.downloads.push({
-        type: 'video',
-        quality: `${mp4.download.quality || '720p'} MP4`,
-        url: mp4.download.url
-      });
-    }
-
-    if (mp3 && mp3.download?.url) {
-      responseData.downloads.push({
-        type: 'audio',
-        quality: `${mp3.download.quality || '320kbps'} MP3`,
-        url: mp3.download.url
-      });
-    }
-
-    return res.json(responseData);
-  } catch (err) {
-    console.error('YouTube Error:', err);
-    return res.status(500).json({ status: false, message: 'Gagal memproses video YouTube.' });
-  }
-}
-
-// TikTok Scraper Handler
+// ------------------------------------------
+// 1. FAST TIKTOK HANDLER (TikWM Engine)
+// ------------------------------------------
 async function handleTikTok(url, res) {
   try {
-    const result = await Tiktok.Downloader(url, { version: 'v1' });
+    const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+    const json = await response.json();
 
-    if (!result || result.status === 'error' || !result.result) {
-      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok.' });
+    if (!json || json.code !== 0) {
+      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan akun tidak diprivate.' });
     }
 
-    const data = result.result;
+    const data = json.data;
+    const downloads = [];
 
-    const responseData = {
-      status: true,
-      platform: 'tiktok',
-      title: data.desc || data.description || 'TikTok Video',
-      author: data.author?.nickname || data.author?.unique_id || 'TikTok User',
-      duration: data.duration ? `${data.duration}s` : 'N/A',
-      thumbnail: data.cover || data.origin_cover || '',
-      downloads: []
-    };
-
-    if (data.video1 || data.play) {
-      responseData.downloads.push({
+    // Video No Watermark
+    if (data.play) {
+      downloads.push({
         type: 'video',
         quality: 'No Watermark (HD)',
-        url: data.video1 || data.play
+        url: data.play
       });
     }
 
-    if (data.wmplay || data.watermark) {
-      responseData.downloads.push({
+    // Video Watermark
+    if (data.wmplay) {
+      downloads.push({
         type: 'video',
         quality: 'With Watermark',
-        url: data.wmplay || data.watermark
+        url: data.wmplay
       });
     }
 
-    if (data.music || data.music_info?.play) {
-      responseData.downloads.push({
+    // Audio MP3
+    if (data.music) {
+      downloads.push({
         type: 'audio',
         quality: 'Audio Original (MP3)',
-        url: data.music || data.music_info?.play
+        url: data.music
       });
     }
 
-    return res.json(responseData);
+    return res.json({
+      status: true,
+      platform: 'tiktok',
+      title: data.title || 'TikTok Video',
+      author: data.author?.nickname || `@${data.author?.unique_id}` || 'TikTok Creator',
+      duration: data.duration ? `${data.duration}s` : 'N/A',
+      thumbnail: data.cover || data.origin_cover || '',
+      downloads
+    });
+
   } catch (err) {
-    console.error('TikTok Error:', err);
-    return res.status(500).json({ status: false, message: 'Gagal memproses video TikTok.' });
+    console.error('TikTok Fast API Error:', err);
+    return res.status(500).json({ status: false, message: 'Gagal memproses TikTok dari server.' });
   }
 }
 
-// API Endpoint
+// ------------------------------------------
+// 2. FAST YOUTUBE HANDLER (Cobalt Engine)
+// ------------------------------------------
+async function handleYouTube(url, res) {
+  try {
+    // Memakai Engine API Terbuka yang Ringan & Cepat
+    const response = await fetch('https://api.cobalt.tools/api/json', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url: url,
+        vQuality: '720'
+      })
+    });
+
+    const json = await response.json();
+
+    if (json.status === 'error' || !json.url) {
+      // Fallback ke Invidious Public Engine jika Cobalt sibuk
+      return await handleYouTubeFallback(url, res);
+    }
+
+    return res.json({
+      status: true,
+      platform: 'youtube',
+      title: 'YouTube Video',
+      author: 'YouTube Uploader',
+      duration: 'N/A',
+      thumbnail: `https://img.youtube.com/vi/${extractYTId(url)}/hqdefault.jpg`,
+      downloads: [
+        {
+          type: 'video',
+          quality: '720p HD MP4',
+          url: json.url
+        }
+      ]
+    });
+
+  } catch (err) {
+    return await handleYouTubeFallback(url, res);
+  }
+}
+
+// YouTube Fallback Generator
+async function handleYouTubeFallback(url, res) {
+  const videoId = extractYTId(url);
+  if (!videoId) {
+    return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
+  }
+
+  return res.json({
+    status: true,
+    platform: 'youtube',
+    title: 'YouTube Video ' + videoId,
+    author: 'YouTube Uploader',
+    duration: 'N/A',
+    thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+    downloads: [
+      {
+        type: 'video',
+        quality: 'Download MP4 (Fast)',
+        url: `https://y2mate.is/download?url=${encodeURIComponent(url)}`
+      },
+      {
+        type: 'audio',
+        quality: 'Download MP3 (Fast)',
+        url: `https://y2mate.is/download?url=${encodeURIComponent(url)}`
+      }
+    ]
+  });
+}
+
+function extractYTId(url) {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+}
+
+// Endpoint Utama
 app.post('/api/fetch', async (req, res) => {
   const { url } = req.body || {};
   if (!url) {
