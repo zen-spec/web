@@ -44,7 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initFAQ();
   initStats();
   initInputAutoDetect();
+  pingBackendHealth();
 });
+
+// Wake-up ping otomatis untuk cloud hosting gratis (Render cold-start)
+function pingBackendHealth() {
+  fetch(`${API_BASE_URL}/health`, { method: 'GET' }).catch(() => {});
+}
 
 // ============================================================
 // PARTICLES
@@ -218,7 +224,7 @@ async function fetchVideoInfo() {
 
   } catch (err) {
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      showError('Tidak dapat terhubung ke server. Pastikan backend sudah berjalan!');
+      showError('Server backend sedang dalam proses bangun (cold-start Render butuh ~30-40 detik) atau koneksi terputus. Silakan tunggu sebentar lalu klik tombol lagi!');
     } else {
       showError(err.message || 'Terjadi kesalahan. Coba lagi.');
     }
