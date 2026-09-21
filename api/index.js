@@ -1,16 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const Tiktok = require('@maxinminax/tiktok-api-dl');
+const yt = require('@vreden/youtube_scraper');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Serve folder public (untuk mode Localhost)
+// Serve static public folder (untuk Localhost)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Helper: Deteksi Platform & ID Video
+// Helper: Deteksi Platform & Extract YT ID
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
@@ -23,180 +25,118 @@ function extractYTId(url) {
 }
 
 // ============================================================
-// 1. YOUTUBE NATIVE SELF-SCRAPER (InnerTube API Engine)
+// 1. YOUTUBE HANDLER (@vreden/youtube_scraper v1.2.9)
 // ============================================================
-async function scrapeYouTubeInnerTube(videoId) {
-  const clients = [
-    {
-      clientName: 'ANDROID',
-      clientVersion: '19.02.39',
-      androidSdkVersion: 31
-    },
-    {
-      clientName: 'IOS',
-      clientVersion: '19.02.1',
-      deviceModel: 'iPhone14,3',
-      osName: 'iPhone',
-      osVersion: '17.2.0'
-    }
-  ];
-
-  for (const clientConfig of clients) {
-    try {
-      const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'com.google.android.youtube/19.02.39 (Linux; U; Android 12)'
-        },
-        body: JSON.stringify({
-          videoId: videoId,
-          context: {
-            client: {
-              ...clientConfig,
-              hl: 'id',
-              gl: 'ID'
-            }
-          }
-        })
-      });
-
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const videoDetails = data.videoDetails || {};
-      const streamingData = data.streamingData || {};
-
-      const allFormats = [
-        ...(streamingData.formats || []),
-        ...(streamingData.adaptiveFormats || [])
-      ];
-
-      // Ambil format yang memiliki URL langsung (tanpa signature cipher)
-      const directFormats = allFormats.filter(f => f.url);
-
-      if (directFormats.length > 0) {
-        return {
-          title: videoDetails.title || `YouTube Video (${videoId})`,
-          author: videoDetails.author || 'YouTube Channel',
-          duration: videoDetails.lengthSeconds 
-            ? `${Math.floor(videoDetails.lengthSeconds / 60)}m ${videoDetails.lengthSeconds % 60}s` 
-            : 'HD',
-          thumbnail: videoDetails.thumbnail?.thumbnails?.slice(-1)[0]?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          formats: directFormats
-        };
-      }
-    } catch (e) {
-      console.error(`InnerTube ${clientConfig.clientName} Error:`, e.message);
-    }
-  }
-
-  return null;
-}
-
 async function handleYouTube(url, res) {
-  const videoId = extractYTId(url);
-  if (!videoId) {
-    return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
-  }
+  try {
+    // Panggil ytmp4 dan ytmp3 secara bersamaan
+    const [mp4Res, mp3Res] = await Promise.allSettled([
+      yt.ytmp4(url),
+      yt.ytmp3(url)
+    ]);
 
-  const scraped = await scrapeYouTubeInnerTube(videoId);
+    const mp4Data = mp4Res.status === 'fulfilled' ? mp4Res.value : null;
+    const mp3Data = mp3Res.status === 'fulfilled' ? mp3Res.value : null;
 
-  if (!scraped) {
+    // Normalisasi struktur output v1.2.9
+    const mp4Result = mp4Data?.result || mp4Data;
+    const mp3Result = mp3Data?.result || mp3Data;
+
+    const videoId = extractYTId(url);
+    const title = mp4Result?.title || mp3Result?.title || `YouTube Video (${videoId || ''})`;
+    const author = mp4Result?.author || mp3Result?.author || mp4Result?.channel || 'YouTube Content';
+    const duration = mp4Result?.duration || mp4Result?.timestamp || 'HD';
+    const thumbnail = mp4Result?.thumbnail || mp4Result?.image || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '');
+
+    const downloads = [];
+
+    // Extract Link MP4
+    const videoUrl = mp4Result?.download?.url || mp4Result?.url || mp4Result?.download;
+    if (videoUrl && typeof videoUrl === 'string') {
+      downloads.push({
+        type: 'video',
+        quality: `${mp4Result?.quality || mp4Result?.download?.quality || '720p'} MP4`,
+        url: videoUrl
+      });
+    }
+
+    // Extract Link MP3
+    const audioUrl = mp3Result?.download?.url || mp3Result?.url || mp3Result?.download;
+    if (audioUrl && typeof audioUrl === 'string') {
+      downloads.push({
+        type: 'audio',
+        quality: `${mp3Result?.quality || mp3Result?.download?.quality || '320kbps'} MP3`,
+        url: audioUrl
+      });
+    }
+
+    if (downloads.length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: 'Gagal mengekstrak link unduhan YouTube. Pastikan link YouTube publik.'
+      });
+    }
+
+    return res.json({
+      status: true,
+      platform: 'youtube',
+      title,
+      author,
+      duration,
+      thumbnail,
+      downloads
+    });
+
+  } catch (err) {
+    console.error('YouTube v1.2.9 Error:', err);
     return res.status(500).json({
       status: false,
-      message: 'Gagal mengekstrak video YouTube. Silakan coba link lain atau beberapa saat lagi.'
+      message: 'Terjadi kesalahan saat memproses video YouTube.'
     });
   }
-
-  const downloads = [];
-
-  // Filter Format Video (MP4 Muxed / Direct Stream)
-  const videoStreams = scraped.formats.filter(f => f.mimeType && f.mimeType.includes('video/mp4'));
-  const addedQualities = new Set();
-
-  videoStreams.forEach(f => {
-    const quality = f.qualityLabel || '720p';
-    if (!addedQualities.has(quality)) {
-      addedQualities.add(quality);
-      downloads.push({
-        type: 'video',
-        quality: `${quality} MP4`,
-        url: f.url
-      });
-    }
-  });
-
-  // Jika tidak ada MP4 Muxed, ambil video stream terbaik yang ada
-  if (downloads.length === 0) {
-    const fallbackVideo = scraped.formats.find(f => f.mimeType && f.mimeType.includes('video'));
-    if (fallbackVideo) {
-      downloads.push({
-        type: 'video',
-        quality: `${fallbackVideo.qualityLabel || '720p'} MP4`,
-        url: fallbackVideo.url
-      });
-    }
-  }
-
-  // Filter Format Audio Only (MP3/M4A)
-  const audioStreams = scraped.formats.filter(f => f.mimeType && f.mimeType.includes('audio'));
-  const bestAudio = audioStreams.find(f => f.mimeType.includes('audio/mp4')) || audioStreams[0];
-
-  if (bestAudio) {
-    downloads.push({
-      type: 'audio',
-      quality: 'Audio Original (M4A/MP3)',
-      url: bestAudio.url
-    });
-  }
-
-  return res.json({
-    status: true,
-    platform: 'youtube',
-    title: scraped.title,
-    author: scraped.author,
-    duration: scraped.duration,
-    thumbnail: scraped.thumbnail,
-    downloads
-  });
 }
 
 // ============================================================
-// 2. TIKTOK SELF-SCRAPER
+// 2. TIKTOK HANDLER
 // ============================================================
 async function handleTikTok(url, res) {
   try {
-    const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
-    const json = await response.json();
+    const result = await Tiktok.Downloader(url, { version: 'v1' });
 
-    if (!json || json.code !== 0) {
+    if (!result || result.status === 'error' || !result.result) {
       return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok.' });
     }
 
-    const data = json.data;
+    const data = result.result;
     const downloads = [];
 
-    if (data.play) downloads.push({ type: 'video', quality: 'No Watermark (HD)', url: data.play });
-    if (data.wmplay) downloads.push({ type: 'video', quality: 'With Watermark', url: data.wmplay });
-    if (data.music) downloads.push({ type: 'audio', quality: 'Audio Original (MP3)', url: data.music });
+    if (data.video1 || data.play) {
+      downloads.push({ type: 'video', quality: 'No Watermark (HD)', url: data.video1 || data.play });
+    }
+    if (data.wmplay || data.watermark) {
+      downloads.push({ type: 'video', quality: 'With Watermark', url: data.wmplay || data.watermark });
+    }
+    if (data.music || data.music_info?.play) {
+      downloads.push({ type: 'audio', quality: 'Audio Original (MP3)', url: data.music || data.music_info?.play });
+    }
 
     return res.json({
       status: true,
       platform: 'tiktok',
-      title: data.title || 'TikTok Video',
-      author: data.author?.nickname || `@${data.author?.unique_id}` || 'TikTok Creator',
+      title: data.desc || data.description || 'TikTok Video',
+      author: data.author?.nickname || data.author?.unique_id || 'TikTok User',
       duration: data.duration ? `${data.duration}s` : 'N/A',
       thumbnail: data.cover || data.origin_cover || '',
       downloads
     });
   } catch (err) {
+    console.error('TikTok Error:', err);
     return res.status(500).json({ status: false, message: 'Gagal memproses video TikTok.' });
   }
 }
 
 // ============================================================
-// 3. INTERNAL PROXY DOWNLOADER (Paksa Langsung Unduh File)
+// 3. PROXY DOWNLOADER (Direct File Download)
 // ============================================================
 app.get('/api/download', async (req, res) => {
   try {
