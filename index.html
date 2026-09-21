@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaveTube - Download Video</title>
+    <title>SaveTube - Downloader</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
-            color: #fff;
+            min-height: 100vh; color: #fff;
         }
         .header { text-align: center; padding: 40px 20px 20px; }
         .header h1 {
             font-size: 2.5rem;
             background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .header p { color: #a0a0b0; margin-top: 10px; }
         .container { max-width: 700px; margin: 30px auto; padding: 0 20px; }
         
         .tabs { display: flex; gap: 10px; margin-bottom: 25px; }
         .tab-btn {
             flex: 1; padding: 15px; border: none; border-radius: 12px;
-            font-size: 1rem; font-weight: 600; cursor: pointer;
-            transition: all 0.3s;
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;
         }
         .tab-btn.tiktok { background: rgba(255,0,80,0.15); color: #ff0050; border: 2px solid rgba(255,0,80,0.3); }
         .tab-btn.tiktok.active { background: linear-gradient(135deg, #ff0050, #00f2ea); color: #fff; border-color: transparent; }
@@ -34,11 +30,8 @@
         .tab-btn.youtube.active { background: linear-gradient(135deg, #ff0000, #cc0000); color: #fff; border-color: transparent; }
         
         .input-section {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.1);
         }
         .input-group { position: relative; margin-bottom: 20px; }
         .input-group input {
@@ -64,46 +57,37 @@
         .loading { display: none; text-align: center; padding: 30px; }
         .loading.show { display: block; }
         .spinner {
-            width: 50px; height: 50px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: #48dbfb;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #48dbfb; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .result {
-            display: none; margin-top: 25px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px; padding: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
+            display: none; margin-top: 25px; background: rgba(255,255,255,0.05);
+            border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);
         }
         .result.show { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        .result img {
-            width: 100%; max-height: 300px; object-fit: cover;
-            border-radius: 12px; margin-bottom: 15px;
-        }
+        .result img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; }
         .result h3 { margin-bottom: 10px; font-size: 1.1rem; }
         .result p { color: #a0a0b0; font-size: 0.9rem; margin-bottom: 15px; }
         
         .dl-btn {
-            display: block; width: 100%; padding: 15px;
-            background: linear-gradient(135deg, #48dbfb, #0abde3);
-            color: #fff; text-decoration: none; text-align: center;
-            border-radius: 10px; font-weight: 700; margin-bottom: 10px;
-            transition: all 0.3s;
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; padding: 15px; background: rgba(72,219,251,0.1);
+            border: 1px solid rgba(72,219,251,0.3); color: #48dbfb;
+            text-decoration: none; border-radius: 10px; font-weight: 600;
+            margin-bottom: 10px; transition: all 0.3s; cursor: pointer;
         }
-        .dl-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .dl-btn.secondary { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .dl-btn:hover { background: rgba(72,219,251,0.2); transform: translateX(5px); }
+        .dl-btn .size { font-size: 0.85rem; color: #a0a0b0; font-weight: normal; }
         
         .notification {
-            position: fixed; top: 20px; right: 20px;
-            padding: 15px 25px; border-radius: 10px;
-            background: rgba(72,219,251,0.9); color: #fff; font-weight: 600;
-            transform: translateX(400px); transition: all 0.4s; z-index: 1000;
+            position: fixed; top: 20px; right: 20px; padding: 15px 25px;
+            border-radius: 10px; background: rgba(72,219,251,0.9); color: #fff;
+            font-weight: 600; transform: translateX(400px); transition: all 0.4s; z-index: 1000;
         }
         .notification.show { transform: translateX(0); }
         .notification.error { background: rgba(255,71,87,0.9); }
@@ -116,7 +100,7 @@
 
 <div class="header">
     <h1>⚡ SaveTube</h1>
-    <p>Download video TikTok & YouTube GRATIS (tanpa watermark!)</p>
+    <p>Powered by tiktok-scraper & youtube_scraper</p>
 </div>
 
 <div class="container">
@@ -137,7 +121,7 @@
 
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <p>Sedang mengambil link download...</p>
+        <p>Sedang mengambil data dari server...</p>
     </div>
 
     <div class="result" id="result"></div>
@@ -145,6 +129,7 @@
 
 <script>
     let currentTab = 'tiktok';
+    const API_URL = 'http://localhost:3000/api'; // URL Backend
 
     function switchTab(tab) {
         currentTab = tab;
@@ -170,54 +155,21 @@
             document.getElementById('urlInput').value = text;
             showNotification('Link ditempel!', 'success');
         } catch {
-            showNotification('Gagal baca clipboard, tempel manual ya', 'error');
+            showNotification('Gagal baca clipboard, tempel manual (Ctrl+V)', 'error');
         }
     }
 
     async function processDownload() {
         const url = document.getElementById('urlInput').value.trim();
-        if (!url) return showNotification('Masukkan link dulu!', 'error');
+        if (!url) return showNotification('Masukkan link terlebih dahulu!', 'error');
 
-        if (currentTab === 'tiktok') {
-            await downloadTikTok(url);
-        } else {
-            await downloadYouTube(url);
-        }
-    }
-
-    // ========== TIKTOK: Pakai API tikwm.com (GRATIS, no API key) ==========
-    async function downloadTikTok(url) {
         showLoading(true);
         try {
-            const response = await fetch('https://www.tikwm.com/api/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'url=' + encodeURIComponent(url) + '&hd=1'
-            });
-            const data = await response.json();
-
-            if (data.code !== 0 || !data.data) {
-                throw new Error(data.msg || 'Gagal memproses video');
+            if (currentTab === 'tiktok') {
+                await fetchTikTok(url);
+            } else {
+                await fetchYouTube(url);
             }
-
-            const video = data.data;
-            const result = document.getElementById('result');
-            result.innerHTML = `
-                <img src="https://www.tikwm.com${video.cover}" alt="thumbnail">
-                <h3>${video.title || 'TikTok Video'}</h3>
-                <p>👤 ${video.author?.unique_id || 'Unknown'} • ❤️ ${formatNumber(video.digg_count)} likes • ▶️ ${formatNumber(video.play_count)} views</p>
-                <a href="https://www.tikwm.com${video.hdplay || video.play}" class="dl-btn" target="_blank" download>
-                    ⬇️ Download Video HD (Tanpa Watermark)
-                </a>
-                <a href="https://www.tikwm.com${video.play}" class="dl-btn secondary" target="_blank" download>
-                    ⬇️ Download Video (Kualitas Biasa)
-                </a>
-                <a href="https://www.tikwm.com${video.music}" class="dl-btn secondary" target="_blank" download>
-                    🎵 Download Audio MP3
-                </a>
-            `;
-            result.classList.add('show');
-            showNotification('Video siap download! Klik tombol di atas 👆', 'success');
         } catch (err) {
             showNotification('Error: ' + err.message, 'error');
         } finally {
@@ -225,91 +177,69 @@
         }
     }
 
-    // ========== YOUTUBE: Redirect ke layanan downloader ==========
-    async function downloadYouTube(url) {
-        // Validasi URL YouTube
-        if (!url.match(/(youtube\.com|youtu\.be)/)) {
-            return showNotification('Link YouTube tidak valid!', 'error');
-        }
+    async function fetchTikTok(url) {
+        const res = await fetch(`${API_URL}/tiktok`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        
+        if (!data.success) throw new Error(data.error);
 
-        showLoading(true);
-        try {
-            // Coba pakai cobalt API (gratis, open source)
-            const response = await fetch('https://api.cobalt.tools/api/json', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: url,
-                    vCodec: 'h264',
-                    vQuality: '1080',
-                    aFormat: 'mp3',
-                    isAudioOnly: false
-                })
-            });
-            const data = await response.json();
+        const video = data.data;
+        const result = document.getElementById('result');
+        result.innerHTML = `
+            <img src="${video.thumbnail}" alt="thumbnail">
+            <h3>${video.title}</h3>
+            <p>👤 @${video.author}</p>
+            <a href="${API_URL}/download?url=${encodeURIComponent(video.videoNoWatermark)}" class="dl-btn" target="_blank">
+                <span>⬇️ Video HD (Tanpa Watermark)</span>
+            </a>
+            <a href="${API_URL}/download?url=${encodeURIComponent(video.videoWithWatermark)}" class="dl-btn" target="_blank">
+                <span>⬇️ Video (Dengan Watermark)</span>
+            </a>
+            <a href="${API_URL}/download?url=${encodeURIComponent(video.music)}" class="dl-btn" target="_blank">
+                <span>🎵 Audio MP3</span>
+            </a>
+        `;
+        result.classList.add('show');
+        showNotification('Video TikTok siap didownload!', 'success');
+    }
 
-            if (data.status === 'error') {
-                throw new Error(data.text || 'Gagal memproses');
-            }
+    async function fetchYouTube(url) {
+        const res = await fetch(`${API_URL}/youtube`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        
+        if (!data.success) throw new Error(data.error);
 
-            if (data.url) {
-                const result = document.getElementById('result');
-                result.innerHTML = `
-                    <h3>🎬 YouTube Video</h3>
-                    <p>Link download berhasil dibuat! Klik tombol di bawah untuk download:</p>
-                    <a href="${data.url}" class="dl-btn" target="_blank" download>
-                        ⬇️ Download Video YouTube
-                    </a>
-                    <p style="margin-top: 15px; font-size: 0.85rem; text-align: center;">
-                        💡 Jika link tidak bisa, coba alternatif di bawah:
-                    </p>
-                    <a href="https://www.y2mate.com/youtube/${extractYTId(url)}" class="dl-btn secondary" target="_blank">
-                        🔄 Buka di Y2Mate (Alternatif)
-                    </a>
-                    <a href="https://ssyoutube.com/watch?v=${extractYTId(url)}" class="dl-btn secondary" target="_blank">
-                        🔄 Buka di SSYouTube (Alternatif)
+        const video = data.data;
+        const result = document.getElementById('result');
+        
+        let formatsHtml = '';
+        video.formats.forEach((fmt, index) => {
+            if (index < 5) { // Batasi maksimal 5 pilihan agar tidak terlalu panjang
+                formatsHtml += `
+                    <a href="${API_URL}/download?url=${encodeURIComponent(fmt.url)}" class="dl-btn" target="_blank">
+                        <span>⬇️ ${fmt.quality} (${fmt.type === 'audio' ? 'MP3' : 'MP4'})</span>
+                        <span class="size">${fmt.size}</span>
                     </a>
                 `;
-                result.classList.add('show');
-                showNotification('Link download siap!', 'success');
             }
-        } catch (err) {
-            // Fallback: redirect ke y2mate
-            const ytId = extractYTId(url);
-            const result = document.getElementById('result');
-            result.innerHTML = `
-                <h3>🎬 YouTube Video</h3>
-                <p>API utama sedang sibuk. Gunakan layanan alternatif:</p>
-                <a href="https://www.y2mate.com/youtube/${ytId}" class="dl-btn" target="_blank">
-                    ⬇️ Download via Y2Mate
-                </a>
-                <a href="https://ssyoutube.com/watch?v=${ytId}" class="dl-btn secondary" target="_blank">
-                    ⬇️ Download via SSYouTube
-                </a>
-                <a href="https://yt1s.com/youtube-to-mp4?q=${encodeURIComponent(url)}" class="dl-btn secondary" target="_blank">
-                    ⬇️ Download via YT1s
-                </a>
-            `;
-            result.classList.add('show');
-            showNotification('Pakai alternatif ya, API utama sibuk', 'error');
-        } finally {
-            showLoading(false);
-        }
-    }
+        });
 
-    function extractYTId(url) {
-        const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-        return match ? match[1] : '';
-    }
-
-    function formatNumber(num) {
-        if (!num) return '0';
-        if (num >= 1000000) return (num/1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num/1000).toFixed(1) + 'K';
-        return num;
+        result.innerHTML = `
+            <img src="${video.thumbnail}" alt="thumbnail">
+            <h3>${video.title}</h3>
+            <p>⏱️ Durasi: ${video.duration} detik</p>
+            ${formatsHtml}
+        `;
+        result.classList.add('show');
+        showNotification('Video YouTube siap didownload!', 'success');
     }
 
     function showLoading(show) {
