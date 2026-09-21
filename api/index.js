@@ -10,21 +10,57 @@ app.use(express.json());
 // Serve folder public (untuk mode Localhost)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Helper: Deteksi Platform
+// Helper: Deteksi Platform & ID
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
   return null;
 }
 
-// Helper: Ekstrak ID Video YouTube
 function extractYTId(url) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
   return match ? match[1] : null;
 }
 
+// ============================================================
+// 📥 ENDPOINT PROXY DOWNLOAD (Paksa Direct File Download)
+// ============================================================
+app.get('/api/download', async (req, res) => {
+  try {
+    const { url, filename } = req.query;
+    if (!url) return res.status(400).send('URL media tidak ditemukan');
+
+    const cleanFilename = (filename || 'saweria_download').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
+
+    if (!response.ok) {
+      return res.redirect(url);
+    }
+
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+
+    // Header khusus agar browser langsung unduh file di tempat
+    res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
+    res.setHeader('Content-Type', contentType);
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return res.send(buffer);
+
+  } catch (err) {
+    console.error('Download Proxy Error:', err);
+    if (req.query.url) return res.redirect(req.query.url);
+    return res.status(500).send('Terjadi kesalahan saat mengunduh file.');
+  }
+});
+
 // ------------------------------------------
-// 1. TIKTOK HANDLER (Direct MP4/MP3)
+// 1. TIKTOK HANDLER
 // ------------------------------------------
 async function handleTikTok(url, res) {
   try {
@@ -32,7 +68,7 @@ async function handleTikTok(url, res) {
     const json = await response.json();
 
     if (!json || json.code !== 0) {
-      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan akun tidak diprivate.' });
+      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok.' });
     }
 
     const data = json.data;
@@ -57,7 +93,7 @@ async function handleTikTok(url, res) {
 }
 
 // ------------------------------------------
-// 2. YOUTUBE HANDLER (Direct Stream - No Redirect)
+// 2. YOUTUBE HANDLER (Cobalt Engine)
 // ------------------------------------------
 async function handleYouTube(url, res) {
   const videoId = extractYTId(url);
@@ -68,7 +104,6 @@ async function handleYouTube(url, res) {
   const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
   const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-  // 1. Ambil Metadata Video (Judul & Uploader) via YouTube oEmbed Resmi
   let title = `YouTube Video (${videoId})`;
   let author = 'YouTube Creator';
 
@@ -79,13 +114,9 @@ async function handleYouTube(url, res) {
       if (oembedData.title) title = oembedData.title;
       if (oembedData.author_name) author = oembedData.author_name;
     }
-  } catch (e) {
-    // Abaikan jika metadata gagal
-  }
+  } catch (e) {}
 
-  // 2. Ambil Direct File Download Link (MP4 & MP3) via Cobalt Engine
   try {
-    // Request Link MP4 Direct
     const mp4Res = await fetch('https://api.cobalt.tools/api/json', {
       method: 'POST',
       headers: {
@@ -99,7 +130,6 @@ async function handleYouTube(url, res) {
       })
     });
 
-    // Request Link MP3 Direct
     const mp3Res = await fetch('https://api.cobalt.tools/api/json', {
       method: 'POST',
       headers: {
@@ -121,7 +151,7 @@ async function handleYouTube(url, res) {
     if (mp4Data && mp4Data.url) {
       downloads.push({
         type: 'video',
-        quality: '720p HD MP4 (Direct File)',
+        quality: '720p HD MP4',
         url: mp4Data.url
       });
     }
@@ -129,12 +159,11 @@ async function handleYouTube(url, res) {
     if (mp3Data && mp3Data.url) {
       downloads.push({
         type: 'audio',
-        quality: 'Audio MP3 (Direct File)',
+        quality: 'Audio MP3',
         url: mp3Data.url
       });
     }
 
-    // Jika Cobalt berhasil memberikan direct link
     if (downloads.length > 0) {
       return res.json({
         status: true,
@@ -146,44 +175,13 @@ async function handleYouTube(url, res) {
         downloads
       });
     }
-
   } catch (err) {
     console.error('Cobalt Direct Fetch Error:', err.message);
   }
 
-  // 3. Fallback Engine via Invidious Stream (Link Direct File Cadangan)
-  try {
-    const invRes = await fetch(`https://inv.tux.pizza/api/v1/videos/${videoId}`);
-    if (invRes.ok) {
-      const invData = await invRes.json();
-      const formatStreams = invData.formatStreams || [];
-      const bestMp4 = formatStreams.find(s => s.container === 'mp4' && s.qualityLabel) || formatStreams[0];
-
-      if (bestMp4 && bestMp4.url) {
-        return res.json({
-          status: true,
-          platform: 'youtube',
-          title: invData.title || title,
-          author: invData.author || author,
-          duration: `${Math.floor((invData.lengthSeconds || 0) / 60)}m`,
-          thumbnail,
-          downloads: [
-            {
-              type: 'video',
-              quality: `${bestMp4.qualityLabel || '720p'} MP4 (Direct Stream)`,
-              url: bestMp4.url
-            }
-          ]
-        });
-      }
-    }
-  } catch (e) {
-    console.error('Invidious Fallback Error:', e.message);
-  }
-
   return res.status(500).json({
     status: false,
-    message: 'Gagal mengekstrak link unduhan langsung. Silakan coba link YouTube lainnya.'
+    message: 'Gagal mengambil video YouTube. Silakan coba beberapa saat lagi.'
   });
 }
 
