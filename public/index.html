@@ -359,17 +359,22 @@
         badge.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400"></i> TikTok';
       }
 
-      // Render Download Buttons
+      // Render Download Buttons (Direct Download via Backend Proxy)
       const grid = document.getElementById('downloadButtonsGrid');
       grid.innerHTML = '';
 
       if (data.downloads && data.downloads.length > 0) {
         data.downloads.forEach(dl => {
           const isAudio = dl.type === 'audio';
+          const ext = isAudio ? '.mp3' : '.mp4';
+          const safeTitle = (data.title || 'saweria_download').substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
+          const filename = `${safeTitle}${ext}`;
+          
+          // Mengarahkan ke proxy download internal
+          const directDownloadUrl = `/api/download?url=${encodeURIComponent(dl.url)}&filename=${encodeURIComponent(filename)}`;
+
           const btn = document.createElement('a');
-          btn.href = dl.url;
-          btn.target = '_blank';
-          btn.rel = 'noopener noreferrer';
+          btn.href = directDownloadUrl;
           btn.className = `flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${
             isAudio 
               ? 'bg-slate-900 border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-slate-950' 
@@ -380,7 +385,7 @@
               <i class="fa-solid ${isAudio ? 'fa-music' : 'fa-video'}"></i>
               ${dl.quality}
             </span>
-            <i class="fa-solid fa-arrow-down flex-shrink-0"></i>
+            <i class="fa-solid fa-download flex-shrink-0"></i>
           `;
           grid.appendChild(btn);
         });
