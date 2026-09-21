@@ -1,25 +1,49 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaweriaFetch - YouTube HD/MP3 & TikTok No WM Downloader</title>
-  <meta name="description" content="Download video YouTube 1080p Full HD, 720p, dan Audio MP3, serta TikTok HD Tanpa Watermark cepat dan gratis.">
-  
+  <title>Yasa Downloader - Unduh Video YouTube HD & TikTok Tanpa Watermark</title>
+  <meta name="description" content="Yasa Downloader: Solusi tercepat dan gratis untuk download video YouTube 1080p Full HD, 720p, audio MP3 jernih, dan video TikTok HD tanpa watermark.">
+  <meta name="theme-color" content="#070b14">
+
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
           colors: {
-            sawer: {
-              gold: '#f59e0b', goldHover: '#d97706', bg: '#0f172a',
-              card: '#1e293b', border: '#334155', text: '#f8fafc', subtext: '#94a3b8'
+            brand: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+            },
+            accent: {
+              400: '#f59e0b',
+              500: '#d97706',
+            },
+            dark: {
+              950: '#060911',
+              900: '#0b1120',
+              850: '#0f172a',
+              800: '#1e293b',
+              750: '#273549',
+              700: '#334155',
             }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
           }
         }
       }
@@ -27,245 +51,429 @@
   </script>
 
   <style>
-    body { background-color: #0f172a; color: #f8fafc; }
-    .amber-glow { box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25); }
-    .amber-glow-lg { box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.4); }
-    .tab-active { background-color: #f59e0b; color: #0f172a; font-weight: 700; }
-    .tab-inactive { background-color: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-    .tab-inactive:hover { background-color: #334155; color: #f8fafc; }
+    body {
+      background-color: #060911;
+      color: #f1f5f9;
+      background-image: 
+        radial-gradient(circle at 50% -10%, rgba(14, 165, 233, 0.14) 0%, transparent 50%),
+        radial-gradient(circle at 10% 40%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 70%, rgba(99, 102, 241, 0.07) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    .glass-nav {
+      background: rgba(11, 17, 32, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-card-subtle {
+      background: rgba(11, 17, 32, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 35px -8px rgba(14, 165, 233, 0.35);
+    }
+
+    .glow-amber {
+      box-shadow: 0 0 30px -8px rgba(245, 158, 11, 0.25);
+    }
+
+    .tab-btn-active {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+
+    .tab-btn-inactive {
+      background: rgba(30, 41, 59, 0.55);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tab-btn-inactive:hover {
+      background: rgba(51, 65, 85, 0.65);
+      color: #f8fafc;
+    }
+
+    /* Custom scrollbar for download list */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(14, 165, 233, 0.7);
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-amber-500 selection:text-slate-900">
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-brand-500 selection:text-white">
 
   <!-- Floating Toast Notification -->
-  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-900/95 border border-amber-500/50 text-amber-300 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-semibold backdrop-blur-md">
-      <i id="toastIcon" class="fa-solid fa-check-circle text-base text-amber-400"></i>
-      <span id="toastText">Pesan notifikasi</span>
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none max-w-sm">
+    <div class="glass-card text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-medium border border-brand-500/40">
+      <div id="toastIconWrap" class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 text-sm">
+        <i id="toastIcon" class="fa-solid fa-check"></i>
+      </div>
+      <span id="toastText" class="leading-snug">Notifikasi</span>
     </div>
   </div>
 
-  <!-- Alert Banner Overlay (Sawer Simulation) -->
-  <div id="alertOverlay" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden transition-all duration-300 transform -translate-y-10 opacity-0 w-[90%] max-w-md">
-    <div class="bg-slate-800 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl flex items-center gap-4 amber-glow-lg">
-      <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl flex-shrink-0 border border-amber-500/30">
-        <i class="fa-solid fa-mug-hot"></i>
-      </div>
-      <div class="flex-1 overflow-hidden">
-        <div class="flex items-center justify-between">
-          <h4 id="alertSender" class="font-bold text-amber-400 truncate text-sm">Orang Baik</h4>
-          <span id="alertAmount" class="text-xs font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">Rp 10.000</span>
-        </div>
-        <p id="alertMessage" class="text-xs text-slate-300 mt-1 italic line-clamp-2">"Semoga bermanfaat websitenya bang!"</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Header / Navbar -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
-          S
+  <!-- Header / Navigation Bar -->
+  <header class="glass-nav sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between py-3.5">
+      
+      <!-- Logo & Brand Name -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-accent-400 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform duration-200">
+          <i class="fa-solid fa-bolt text-lg"></i>
         </div>
         <div>
-          <span class="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
-            Saweria<span class="text-amber-500">Fetch</span>
-          </span>
-          <span class="text-[10px] text-slate-400 block -mt-1 font-medium">YouTube 1080p HD & TikTok No WM</span>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-lg sm:text-xl tracking-tight text-white">
+              Yasa<span class="bg-gradient-to-r from-brand-400 to-accent-400 bg-clip-text text-transparent">Downloader</span>
+            </span>
+            <span class="text-[10px] uppercase font-extrabold tracking-wider bg-brand-500/15 text-brand-400 px-2 py-0.5 rounded-md border border-brand-500/30 hidden xs:inline-block">
+              PRO
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">TikTok No-WM & YouTube HD/MP3</p>
         </div>
-      </div>
+      </a>
 
+      <!-- Right Header Actions -->
       <div class="flex items-center gap-3">
-        <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-          HD Server Ready
-        </span>
-        <button onclick="openSawerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-2">
-          <i class="fa-solid fa-heart"></i>
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Server Aktif & Cepat</span>
+        </div>
+
+        <button 
+          onclick="openSawerModal()" 
+          class="bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-amber-600 text-dark-950 font-bold text-xs px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-md shadow-accent-500/20 flex items-center gap-2 active:scale-95 cursor-pointer"
+        >
+          <i class="fa-solid fa-mug-hot"></i>
           <span>Traktir Kopi</span>
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- Main Content Area -->
-  <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 w-full">
 
-    <div class="text-center my-6">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-amber-400 text-xs font-semibold mb-4">
-        <i class="fa-solid fa-bolt"></i> 1080p Full HD, Multi-Kualitas & MP3 Jernih
+    <!-- Hero Title & Tagline -->
+    <div class="text-center mb-8 sm:mb-10">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-dark-850/90 border border-slate-700/80 text-brand-400 text-xs font-semibold mb-4 shadow-sm backdrop-blur-md">
+        <i class="fa-solid fa-wand-magic-sparkles text-accent-400"></i>
+        <span>1080p Full HD, Audio MP3 & TikTok Tanpa Watermark</span>
       </div>
-      <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
-        Unduh Video <span class="text-amber-500">YouTube</span> & <span class="text-amber-500">TikTok</span>
+
+      <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight sm:leading-snug mb-3">
+        Yasa Downloader <br class="hidden sm:block">
+        <span class="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">YouTube</span> & 
+        <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">TikTok</span>
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-        Bisa atur kualitas video YouTube (1080p, 720p, 480p), unduh audio MP3, serta TikTok HD tanpa watermark secara instan.
+
+      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+        Unduh video YouTube dengan resolusi hingga 1080p Full HD, ekstrak musik MP3 jernih, serta simpan video TikTok tanpa logo & watermark secara instan.
       </p>
     </div>
 
-    <!-- Input Form Card -->
-    <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 mb-8 amber-glow">
+    <!-- Main Input Form Card -->
+    <div class="glass-card rounded-3xl p-5 sm:p-7 mb-8 glow-cyan transition-all">
       <form id="fetchForm" onsubmit="handleFetch(event)" class="space-y-4">
+        
+        <!-- Input URL Box -->
         <div class="relative flex items-center">
-          <div id="platformBadge" class="absolute left-4 text-slate-400 text-lg transition-colors">
+          <div id="platformBadge" class="absolute left-4 sm:left-5 text-slate-400 text-xl transition-all duration-300 flex items-center justify-center w-6">
             <i class="fa-solid fa-link"></i>
           </div>
+          
           <input 
             type="text" 
             id="urlInput"
-            placeholder="Paste link YouTube (video/shorts) atau link TikTok di sini..."
+            placeholder="Tempel link video YouTube (Video/Shorts) atau TikTok di sini..."
             oninput="detectPlatformOnInput()"
-            class="w-full bg-slate-900 text-white placeholder-slate-500 text-sm sm:text-base rounded-xl pl-12 pr-28 py-3.5 sm:py-4 border border-slate-700 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+            class="w-full bg-dark-950/90 text-white placeholder-slate-500 text-sm sm:text-base rounded-2xl pl-12 sm:pl-14 pr-28 sm:pr-32 py-4 border border-slate-700/80 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-inner"
             required
+            autocomplete="off"
           >
-          <div class="absolute right-2 flex items-center gap-1">
+          
+          <!-- Actions inside input -->
+          <div class="absolute right-2.5 sm:right-3 flex items-center gap-1.5">
+            <button 
+              type="button" 
+              id="btnClear"
+              onclick="clearInput()"
+              class="hidden px-2 py-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+              title="Hapus Teks"
+            >
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
             <button 
               type="button" 
               onclick="pasteClipboard()"
-              class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all"
+              class="px-3 py-2 text-xs font-bold text-slate-300 hover:text-white bg-dark-800/90 hover:bg-dark-750 border border-slate-700/80 rounded-xl transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
               title="Paste dari Clipboard"
             >
-              <i class="fa-regular fa-paste"></i> Paste
+              <i class="fa-regular fa-paste"></i>
+              <span>Tempel</span>
             </button>
           </div>
         </div>
 
+        <!-- Sample Platform Links -->
+        <div class="flex items-center justify-between flex-wrap gap-2 text-xs text-slate-400 px-1">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-500 font-medium">Contoh tautan:</span>
+            <button type="button" onclick="sampleLink('yt')" class="text-red-400/90 hover:text-red-300 font-semibold hover:underline">
+              <i class="fa-brands fa-youtube"></i> YouTube
+            </button>
+            <span class="text-slate-600">•</span>
+            <button type="button" onclick="sampleLink('tt')" class="text-cyan-400/90 hover:text-cyan-300 font-semibold hover:underline">
+              <i class="fa-brands fa-tiktok"></i> TikTok
+            </button>
+          </div>
+          <span class="text-[11px] text-slate-500 hidden sm:inline-block">Mendukung link pendek vt.tiktok.com & shorts</span>
+        </div>
+
+        <!-- Submit Button -->
         <button 
           type="submit" 
           id="btnSubmit"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-base py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer"
+          class="w-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-500 hover:from-brand-400 hover:to-brand-500 text-white font-extrabold text-base py-4 rounded-2xl transition-all shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2.5 group cursor-pointer active:scale-[0.99]"
         >
-          <i class="fa-solid fa-download group-hover:translate-y-0.5 transition-transform"></i>
-          <span>Proses & Ambil Kualitas Media</span>
+          <i class="fa-solid fa-arrow-down group-hover:translate-y-0.5 transition-transform"></i>
+          <span>Proses & Ambil Opsi Unduhan</span>
         </button>
+
       </form>
     </div>
 
+    <!-- Feature Highlights -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-8">
+      <div class="glass-card-subtle rounded-2xl p-4 flex items-center gap-3.5 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center text-lg flex-shrink-0 border border-red-500/25">
+          <i class="fa-brands fa-youtube"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-slate-200">YouTube 1080p FHD</h4>
+          <p class="text-[11px] text-slate-400">Tersedia opsi 1080p, 720p & 480p</p>
+        </div>
+      </div>
+
+      <div class="glass-card-subtle rounded-2xl p-4 flex items-center gap-3.5 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-lg flex-shrink-0 border border-cyan-500/25">
+          <i class="fa-brands fa-tiktok"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-slate-200">TikTok No-Watermark</h4>
+          <p class="text-[11px] text-slate-400">Bersih dari watermark & logo aplikasi</p>
+        </div>
+      </div>
+
+      <div class="glass-card-subtle rounded-2xl p-4 flex items-center gap-3.5 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-accent-400/15 text-accent-400 flex items-center justify-center text-lg flex-shrink-0 border border-accent-400/25">
+          <i class="fa-solid fa-music"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-slate-200">Ekstrak Audio MP3</h4>
+          <p class="text-[11px] text-slate-400">Simpan musik & sound audio jernih</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading State Skeleton -->
-    <div id="loadingState" class="hidden bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 mb-8 text-center animate-pulse">
-      <div class="inline-block p-4 rounded-full bg-amber-500/10 text-amber-500 mb-3">
+    <div id="loadingState" class="hidden glass-card rounded-3xl p-8 mb-8 text-center animate-pulse border border-brand-500/30">
+      <div class="inline-flex p-4 rounded-2xl bg-brand-500/15 text-brand-400 mb-3 border border-brand-500/25">
         <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
       </div>
-      <h3 class="text-lg font-bold text-white mb-1">Mengekstrak Kualitas HD & Audio...</h3>
-      <p class="text-xs text-slate-400">Sedang memproses opsi 1080p, 720p, MP4 HD No-Watermark, dan MP3. Mohon tunggu sejenak.</p>
+      <h3 class="text-lg font-bold text-white mb-1">Mengekstrak Resolusi & Kualitas Media...</h3>
+      <p class="text-xs text-slate-400 max-w-md mx-auto">
+        Server Yasa Downloader sedang mengambil daftar format MP4 HD dan Audio MP3. Mohon tunggu beberapa detik.
+      </p>
     </div>
 
     <!-- Error Alert Box -->
-    <div id="errorAlert" class="hidden bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-8 flex items-center gap-3 text-red-400 text-sm">
-      <i class="fa-solid fa-circle-exclamation text-lg flex-shrink-0"></i>
-      <span id="errorMessage">Terjadi kesalahan saat memproses URL.</span>
+    <div id="errorAlert" class="hidden bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-8 flex items-center gap-3 text-red-400 text-sm shadow-lg">
+      <i class="fa-solid fa-circle-exclamation text-xl flex-shrink-0"></i>
+      <span id="errorMessage" class="flex-1 text-xs sm:text-sm font-medium">Terjadi kesalahan saat memproses tautan.</span>
+      <button onclick="hideElement('errorAlert')" class="text-slate-400 hover:text-white text-xs p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
 
     <!-- Result Card -->
-    <div id="resultCard" class="hidden bg-slate-800/95 border border-slate-700 rounded-2xl p-5 sm:p-6 mb-8 shadow-2xl">
+    <div id="resultCard" class="hidden glass-card rounded-3xl p-5 sm:p-7 mb-8 shadow-2xl border border-slate-700/80">
       <div class="flex flex-col md:flex-row gap-6">
-        <div class="w-full md:w-64 flex-shrink-0 relative group">
-          <img id="resThumbnail" src="" alt="Thumbnail" class="w-full h-44 object-cover rounded-xl border border-slate-700 bg-slate-900 shadow-md">
-          <span id="resBadge" class="absolute top-2 left-2 bg-slate-900/90 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1.5 shadow">
-            <i class="fa-brands fa-youtube"></i> YouTube
+        
+        <!-- Thumbnail Section -->
+        <div class="w-full md:w-72 flex-shrink-0 relative group">
+          <div class="overflow-hidden rounded-2xl border border-slate-700/80 bg-dark-950 shadow-md">
+            <img id="resThumbnail" src="" alt="Thumbnail" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+          </div>
+          <span id="resBadge" class="absolute top-3 left-3 bg-dark-950/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-xl border border-slate-700/80 flex items-center gap-1.5 shadow">
+            <i class="fa-brands fa-youtube text-red-500"></i> YouTube
           </span>
-          <span id="resDuration" class="absolute bottom-2 right-2 bg-slate-950/90 text-white text-[10px] font-mono px-2 py-0.5 rounded shadow">
+          <span id="resDuration" class="absolute bottom-3 right-3 bg-dark-950/90 text-slate-200 text-[11px] font-mono px-2.5 py-0.5 rounded-lg border border-slate-700/80 shadow">
             00:00
           </span>
         </div>
 
+        <!-- Details & Download Options -->
         <div class="flex-1 flex flex-col justify-between">
           <div>
-            <h2 id="resTitle" class="text-lg sm:text-xl font-bold text-white line-clamp-2 mb-1.5 leading-snug">Title Video...</h2>
+            <h2 id="resTitle" class="text-base sm:text-lg font-bold text-white line-clamp-2 mb-1.5 leading-snug">
+              Judul Video...
+            </h2>
             <p id="resAuthor" class="text-xs text-slate-400 flex items-center gap-1.5 mb-4">
-              <i class="fa-solid fa-user-circle"></i> Uploader
+              <i class="fa-solid fa-circle-user text-brand-400"></i>
+              <span id="resAuthorText">Uploader</span>
             </p>
           </div>
 
-          <!-- Format Filters -->
-          <div class="border-t border-slate-700/80 pt-3">
-            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-sliders text-amber-400"></i> Pilihan Kualitas:
+          <!-- Format Filters Tabs -->
+          <div class="border-t border-slate-800 pt-4">
+            <div class="flex items-center justify-between mb-3.5 flex-wrap gap-2">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-brand-400"></i> Pilihan Kualitas:
               </span>
-              <div class="flex items-center gap-1.5" id="filterTabs">
-                <button type="button" onclick="setFilter('all')" id="tab-all" class="px-2.5 py-1 text-xs rounded-lg tab-active transition-all">Semua</button>
-                <button type="button" onclick="setFilter('video')" id="tab-video" class="px-2.5 py-1 text-xs rounded-lg tab-inactive transition-all">Video MP4</button>
-                <button type="button" onclick="setFilter('audio')" id="tab-audio" class="px-2.5 py-1 text-xs rounded-lg tab-inactive transition-all">Audio MP3</button>
+              <div class="flex items-center gap-1.5 p-1 bg-dark-950/80 rounded-xl border border-slate-800" id="filterTabs">
+                <button type="button" onclick="setFilter('all')" id="tab-all" class="px-3 py-1 text-xs rounded-lg tab-btn-active transition-all">Semua</button>
+                <button type="button" onclick="setFilter('video')" id="tab-video" class="px-3 py-1 text-xs rounded-lg tab-btn-inactive transition-all">Video MP4</button>
+                <button type="button" onclick="setFilter('audio')" id="tab-audio" class="px-3 py-1 text-xs rounded-lg tab-btn-inactive transition-all">Audio MP3</button>
               </div>
             </div>
 
             <!-- Download Buttons Grid -->
-            <div id="downloadButtonsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-80 overflow-y-auto pr-1">
+            <div id="downloadButtonsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
               <!-- Rendered via JS -->
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
 
     <!-- Download History -->
-    <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+    <div class="glass-card-subtle rounded-3xl p-5 sm:p-6 mb-8 border border-slate-800">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-bold text-sm text-white flex items-center gap-2">
-          <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> Riwayat Unduhan Terakhir
+          <i class="fa-solid fa-clock-rotate-left text-brand-400"></i> Riwayat Unduhan Terakhir
         </h3>
-        <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition-colors">
-          Hapus Riwayat
+        <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-regular fa-trash-can"></i> Hapus Riwayat
         </button>
       </div>
       
       <div id="historyList" class="space-y-2">
-        <p class="text-xs text-slate-500 text-center py-4">Belum ada riwayat unduhan.</p>
+        <p class="text-xs text-slate-500 text-center py-5">Belum ada riwayat unduhan.</p>
+      </div>
+    </div>
+
+    <!-- How To Use / Steps Section -->
+    <div class="mt-12 text-center">
+      <h3 class="text-xl font-bold text-white mb-2">Cara Menggunakan Yasa Downloader</h3>
+      <p class="text-xs text-slate-400 mb-6">Unduh video favorit Anda hanya dalam 3 langkah mudah</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+        <div class="glass-card-subtle p-5 rounded-2xl border border-slate-800/80">
+          <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-sm mb-3">1</div>
+          <h4 class="font-bold text-sm text-slate-200 mb-1">Salin Tautan</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">Buka YouTube atau TikTok, lalu klik opsi Bagikan dan Salin Tautan (Copy Link) video yang ingin diunduh.</p>
+        </div>
+
+        <div class="glass-card-subtle p-5 rounded-2xl border border-slate-800/80">
+          <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-sm mb-3">2</div>
+          <h4 class="font-bold text-sm text-slate-200 mb-1">Tempel & Ekstrak</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">Tempelkan link ke dalam kotak input di atas, kemudian tekan tombol "Proses & Ambil Opsi Unduhan".</p>
+        </div>
+
+        <div class="glass-card-subtle p-5 rounded-2xl border border-slate-800/80">
+          <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-sm mb-3">3</div>
+          <h4 class="font-bold text-sm text-slate-200 mb-1">Pilih Kualitas</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">Pilih format yang Anda inginkan (1080p, 720p, No Watermark, atau MP3) lalu klik tombol Unduh.</p>
+        </div>
       </div>
     </div>
 
   </main>
 
-  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
-    <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p>© 2026 SaweriaFetch. Dibuat untuk kemudahan unduh media Full HD.</p>
-      <div class="flex items-center gap-4">
-        <a href="#" class="hover:text-amber-400 transition-colors">Syarat & Ketentuan</a>
-        <a href="#" class="hover:text-amber-400 transition-colors">Privasi</a>
-        <button onclick="openSawerModal()" class="text-amber-400 hover:underline">Sawer Admin</button>
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-dark-950/90 py-8 text-center text-xs text-slate-500">
+    <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold text-slate-300">Yasa<span class="text-brand-400">Downloader</span></span>
+        <span>•</span>
+        <span>© 2026 Solusi Cepat Unduh Media TikTok & YouTube.</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <button onclick="openSawerModal()" class="text-accent-400 hover:text-accent-300 transition-colors font-medium flex items-center gap-1.5">
+          <i class="fa-solid fa-mug-hot"></i> Traktir Developer
+        </button>
       </div>
     </div>
   </footer>
 
-  <!-- Modal Sawer -->
-  <div id="sawerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button onclick="closeSawerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+  <!-- Modal Traktir / Sawer -->
+  <div id="sawerModal" class="fixed inset-0 bg-dark-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-accent-400/30 glow-amber">
+      
+      <button onclick="closeSawerModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-base w-8 h-8 rounded-full bg-dark-800 flex items-center justify-center transition-colors">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
-      <div class="text-center mb-5">
-        <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto mb-2 border border-amber-500/30">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-accent-400/20 text-accent-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-accent-400/30">
           <i class="fa-solid fa-mug-hot"></i>
         </div>
-        <h3 class="text-xl font-bold text-white">Traktir Kopi Developer</h3>
-        <p class="text-xs text-slate-400 mt-1">Dukungan Anda membantu menjaga server tetap aktif!</p>
+        <h3 class="text-xl font-bold text-white">Dukung Yasa Downloader</h3>
+        <p class="text-xs text-slate-400 mt-1">Dukungan Anda membantu memelihara server pemroses video tetap cepat dan online 24/7!</p>
       </div>
 
-      <form onsubmit="handleSawerSubmit(event)" class="space-y-3">
+      <form onsubmit="handleSawerSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Nama / Nickname</label>
-          <input type="text" id="sawerName" placeholder="Orang Baik" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" required>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Nama / Nickname</label>
+          <input type="text" id="sawerName" placeholder="Orang Baik" class="w-full bg-dark-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" required>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Nominal (Rp)</label>
-          <input type="number" id="sawerAmount" value="10000" min="5000" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" required>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Nominal (Rp)</label>
+          <input type="number" id="sawerAmount" value="10000" min="5000" step="1000" class="w-full bg-dark-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" required>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Pesan Dukungan</label>
-          <textarea id="sawerMessage" rows="2" placeholder="Semangat terus min!" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Pesan Dukungan</label>
+          <textarea id="sawerMessage" rows="2" placeholder="Semangat terus developernya!" class="w-full bg-dark-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"></textarea>
         </div>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all mt-2">
-          Kirim Saweran (Simulasi)
+        <button type="submit" class="w-full bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-amber-600 text-dark-950 font-extrabold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-accent-400/20 mt-2 cursor-pointer active:scale-98">
+          Kirim Dukungan (Simulasi)
         </button>
       </form>
+
     </div>
   </div>
 
   <script>
-    // Dukung lokal dev (localhost port 4914) maupun Vercel production rewrites
+    // Konfigurasi endpoint untuk lokal maupun production Vercel
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
     const BACKEND_BASE_URL = isLocalhost ? 'http://localhost:4914' : window.location.origin;
     const API_FETCH_URL = `${BACKEND_BASE_URL}/api/fetch`;
@@ -275,19 +483,45 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       renderHistory();
+      detectPlatformOnInput();
     });
 
     function detectPlatformOnInput() {
-      const url = document.getElementById('urlInput').value.trim();
+      const input = document.getElementById('urlInput');
+      const url = input.value.trim();
       const badge = document.getElementById('platformBadge');
+      const clearBtn = document.getElementById('btnClear');
+
+      if (url.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
 
       if (/youtube\.com|youtu\.be/i.test(url)) {
-        badge.innerHTML = '<i class="fa-brands fa-youtube text-red-500"></i>';
+        badge.innerHTML = '<i class="fa-brands fa-youtube text-red-500 text-xl"></i>';
       } else if (/tiktok\.com/i.test(url)) {
-        badge.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400"></i>';
+        badge.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400 text-xl"></i>';
       } else {
         badge.innerHTML = '<i class="fa-solid fa-link text-slate-400"></i>';
       }
+    }
+
+    function clearInput() {
+      const input = document.getElementById('urlInput');
+      input.value = '';
+      detectPlatformOnInput();
+      input.focus();
+    }
+
+    function sampleLink(platform) {
+      const input = document.getElementById('urlInput');
+      if (platform === 'yt') {
+        input.value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      } else {
+        input.value = 'https://vt.tiktok.com/ZS67rB8jF/';
+      }
+      detectPlatformOnInput();
     }
 
     async function pasteClipboard() {
@@ -295,8 +529,9 @@
         const text = await navigator.clipboard.readText();
         document.getElementById('urlInput').value = text;
         detectPlatformOnInput();
+        showToast('Tautan berhasil ditempel!', 'info');
       } catch (err) {
-        showToast('Gagal membaca clipboard. Silakan paste manual (Ctrl+V).', 'warning');
+        showToast('Silakan gunakan tombol Ctrl+V untuk menempel.', 'warning');
       }
     }
 
@@ -311,7 +546,7 @@
 
       const submitBtn = document.getElementById('btnSubmit');
       submitBtn.disabled = true;
-      submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+      submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
 
       try {
         const response = await fetch(API_FETCH_URL, {
@@ -326,17 +561,17 @@
           currentDownloads = data.downloads || [];
           renderResult(data);
           saveToHistory(data);
-          showToast('Media berhasil diekstrak! Silakan pilih kualitas.', 'success');
+          showToast('Video berhasil diekstrak! Silakan pilih kualitas.', 'success');
         } else {
-          showError(data.message || 'Gagal memproses video.');
+          showError(data.message || 'Gagal memproses tautan video.');
         }
       } catch (err) {
         console.error('Fetch error:', err);
-        showError('Tidak dapat terhubung ke Server Backend. Pastikan server Node.js aktif.');
+        showError('Tidak dapat terhubung ke Server Yasa Downloader. Pastikan server aktif.');
       } finally {
         hideElement('loadingState');
         submitBtn.disabled = false;
-        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
       }
     }
 
@@ -345,9 +580,9 @@
       ['all', 'video', 'audio'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (t === type) {
-          btn.className = 'px-2.5 py-1 text-xs rounded-lg tab-active transition-all';
+          btn.className = 'px-3 py-1 text-xs rounded-lg tab-btn-active transition-all';
         } else {
-          btn.className = 'px-2.5 py-1 text-xs rounded-lg tab-inactive transition-all';
+          btn.className = 'px-3 py-1 text-xs rounded-lg tab-btn-inactive transition-all';
         }
       });
       renderDownloadGrid();
@@ -356,7 +591,7 @@
     function renderResult(data) {
       document.getElementById('resThumbnail').src = data.thumbnail || 'https://via.placeholder.com/400x225?text=No+Thumbnail';
       document.getElementById('resTitle').innerText = data.title;
-      document.getElementById('resAuthor').innerText = `Uploader: ${data.author || 'Unknown'}`;
+      document.getElementById('resAuthorText').innerText = data.author || 'Kreator';
       document.getElementById('resDuration').innerText = data.duration || 'HD';
 
       const badge = document.getElementById('resBadge');
@@ -368,6 +603,9 @@
 
       setFilter('all');
       showElement('resultCard');
+
+      // Scroll smoothly to result card
+      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function renderDownloadGrid() {
@@ -382,13 +620,14 @@
       });
 
       if (filtered.length === 0) {
-        grid.innerHTML = '<p class="text-xs text-slate-400 col-span-2 py-4 text-center">Tidak ada opsi untuk filter ini.</p>';
+        grid.innerHTML = '<p class="text-xs text-slate-400 col-span-2 py-6 text-center">Tidak ada opsi untuk filter ini.</p>';
         return;
       }
 
-      filtered.forEach((dl, index) => {
+      filtered.forEach((dl) => {
         const isAudio = dl.type === 'audio';
-        const isHD = dl.quality.includes('1080p') || dl.quality.includes('HD');
+        const is1080p = dl.quality.includes('1080p') || dl.quality.includes('Full HD');
+        const is720p = dl.quality.includes('720p');
 
         let fullDownloadUrl = dl.url;
         if (fullDownloadUrl.startsWith('/api/')) {
@@ -396,55 +635,63 @@
         }
 
         const card = document.createElement('div');
-        card.className = `flex items-center justify-between p-3 rounded-xl border transition-all ${
-          isAudio 
-            ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400' 
-            : isHD 
-              ? 'bg-slate-900/90 border-amber-500 hover:border-amber-400 shadow-sm'
-              : 'bg-slate-900/60 border-slate-700 hover:border-slate-500'
-        }`;
+        
+        let cardStyle = 'bg-dark-900/90 border-slate-800 hover:border-slate-700';
+        if (isAudio) {
+          cardStyle = 'bg-dark-900/95 border-brand-500/40 hover:border-brand-400';
+        } else if (is1080p) {
+          cardStyle = 'bg-gradient-to-r from-brand-500/10 via-dark-900 to-dark-900 border-brand-500 hover:border-brand-400 shadow-md';
+        } else if (is720p) {
+          cardStyle = 'bg-dark-900/95 border-cyan-500/40 hover:border-cyan-400';
+        }
+
+        card.className = `flex items-center justify-between p-3.5 rounded-2xl border transition-all ${cardStyle}`;
 
         let badgeHtml = '';
         if (isAudio) {
-          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">MP3 Audio</span>';
-        } else if (dl.quality.includes('1080p')) {
-          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">1080p Full HD</span>';
-        } else if (dl.quality.includes('720p')) {
-          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">720p HD</span>';
-        } else if (dl.quality.includes('Full HD') || dl.quality.includes('(HD')) {
-          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">HD No WM</span>';
+          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-accent-400/20 text-accent-400 border border-accent-400/30">MP3 Audio</span>';
+        } else if (is1080p) {
+          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">1080p FHD</span>';
+        } else if (is720p) {
+          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">720p HD</span>';
+        } else if (dl.quality.includes('Full HD') || dl.quality.includes('(HD') || dl.quality.includes('No Watermark')) {
+          badgeHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">HD No WM</span>';
         } else {
-          badgeHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${dl.resolution || 'MP4'}</span>`;
+          badgeHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">${dl.resolution || 'MP4'}</span>`;
         }
 
         card.innerHTML = `
           <div class="flex items-center gap-3 overflow-hidden mr-2">
-            <div class="w-8 h-8 rounded-lg ${isAudio ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-200'} flex items-center justify-center flex-shrink-0 text-sm">
+            <div class="w-9 h-9 rounded-xl ${isAudio ? 'bg-accent-400/20 text-accent-400' : 'bg-dark-800 text-slate-200'} flex items-center justify-center flex-shrink-0 text-sm border border-slate-700/50">
               <i class="fa-solid ${isAudio ? 'fa-music' : 'fa-film'}"></i>
             </div>
             <div class="truncate">
               <div class="flex items-center gap-1.5 mb-0.5">
                 ${badgeHtml}
+                <span class="text-[10px] text-slate-400 font-mono">${isAudio ? 'Audio' : 'Video'}</span>
               </div>
-              <span class="text-xs font-semibold text-slate-200 truncate block">${dl.quality}</span>
+              <span class="text-xs font-bold text-slate-100 truncate block">${dl.quality}</span>
             </div>
           </div>
+
           <div class="flex items-center gap-1.5 flex-shrink-0">
             <button 
               type="button" 
               onclick="copyDownloadLink('${fullDownloadUrl}')" 
-              class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors"
-              title="Salin Link Langsung"
+              class="w-9 h-9 rounded-xl bg-dark-800 hover:bg-dark-750 text-slate-400 hover:text-white border border-slate-700/60 flex items-center justify-center text-xs transition-colors active:scale-95 cursor-pointer"
+              title="Salin Tautan"
             >
               <i class="fa-regular fa-copy"></i>
             </button>
             <a 
               href="${fullDownloadUrl}" 
               onclick="triggerDownloadUI(this)"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-md ${
                 isAudio 
-                  ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md' 
-                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-accent-400 to-accent-500 hover:from-amber-400 hover:to-accent-500 text-dark-950' 
+                  : is1080p
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white'
+                    : 'bg-brand-500 hover:bg-brand-400 text-white'
               }"
             >
               <i class="fa-solid fa-download"></i>
@@ -459,10 +706,10 @@
     function triggerDownloadUI(btn) {
       const originalText = btn.innerHTML;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mulai...</span>';
-      showToast('Memulai proses unduhan...', 'info');
+      showToast('Memulai proses unduhan berkas...', 'info');
       setTimeout(() => {
         btn.innerHTML = originalText;
-      }, 3000);
+      }, 3500);
     }
 
     function copyDownloadLink(url) {
@@ -477,63 +724,69 @@
       const toast = document.getElementById('toastNotification');
       const text = document.getElementById('toastText');
       const icon = document.getElementById('toastIcon');
+      const iconWrap = document.getElementById('toastIconWrap');
 
       text.innerText = message;
       if (type === 'success') {
-        icon.className = 'fa-solid fa-circle-check text-base text-emerald-400';
+        icon.className = 'fa-solid fa-check text-emerald-400';
+        iconWrap.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0';
       } else if (type === 'error') {
-        icon.className = 'fa-solid fa-circle-xmark text-base text-red-400';
+        icon.className = 'fa-solid fa-xmark text-red-400';
+        iconWrap.className = 'w-8 h-8 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0';
       } else if (type === 'warning') {
-        icon.className = 'fa-solid fa-circle-exclamation text-base text-amber-400';
+        icon.className = 'fa-solid fa-exclamation text-accent-400';
+        iconWrap.className = 'w-8 h-8 rounded-xl bg-accent-400/20 text-accent-400 flex items-center justify-center flex-shrink-0';
       } else {
-        icon.className = 'fa-solid fa-circle-info text-base text-amber-400';
+        icon.className = 'fa-solid fa-circle-info text-brand-400';
+        iconWrap.className = 'w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0';
       }
 
-      toast.classList.remove('translate-y-16', 'opacity-0');
+      toast.classList.remove('translate-y-20', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
       setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-16', 'opacity-0');
+        toast.classList.add('translate-y-20', 'opacity-0');
       }, 3500);
     }
 
     function saveToHistory(item) {
-      let history = JSON.parse(localStorage.getItem('sawer_history') || '[]');
+      let history = JSON.parse(localStorage.getItem('yasa_history') || localStorage.getItem('sawer_history') || '[]');
       history.unshift({
         title: item.title,
         platform: item.platform,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
-      history = history.slice(0, 5);
-      localStorage.setItem('sawer_history', JSON.stringify(history));
+      history = history.slice(0, 6);
+      localStorage.setItem('yasa_history', JSON.stringify(history));
       renderHistory();
     }
 
     function renderHistory() {
-      const history = JSON.parse(localStorage.getItem('sawer_history') || '[]');
+      const history = JSON.parse(localStorage.getItem('yasa_history') || localStorage.getItem('sawer_history') || '[]');
       const container = document.getElementById('historyList');
 
       if (history.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Belum ada riwayat unduhan.</p>';
+        container.innerHTML = '<p class="text-xs text-slate-500 text-center py-5">Belum ada riwayat unduhan.</p>';
         return;
       }
 
       container.innerHTML = history.map(h => `
-        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
-          <div class="flex items-center gap-2 overflow-hidden mr-2">
-            <i class="fa-brands ${h.platform === 'youtube' ? 'fa-youtube text-red-500' : 'fa-tiktok text-cyan-400'}"></i>
-            <span class="text-slate-300 truncate">${h.title}</span>
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-dark-900/60 border border-slate-800 text-xs hover:border-slate-700 transition-colors">
+          <div class="flex items-center gap-2.5 overflow-hidden mr-2">
+            <i class="fa-brands ${h.platform === 'youtube' ? 'fa-youtube text-red-500' : 'fa-tiktok text-cyan-400'} text-sm flex-shrink-0"></i>
+            <span class="text-slate-300 truncate font-medium">${h.title}</span>
           </div>
-          <span class="text-[10px] text-slate-500 flex-shrink-0">${h.time}</span>
+          <span class="text-[10px] text-slate-500 flex-shrink-0 font-mono">${h.time}</span>
         </div>
       `).join('');
     }
 
     function clearHistory() {
+      localStorage.removeItem('yasa_history');
       localStorage.removeItem('sawer_history');
       renderHistory();
-      showToast('Riwayat berhasil dibersihkan', 'info');
+      showToast('Riwayat unduhan berhasil dibersihkan', 'info');
     }
 
     function openSawerModal() { showElement('sawerModal'); }
@@ -541,45 +794,8 @@
 
     function handleSawerSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById('sawerName').value || 'Orang Baik';
-      const amount = parseInt(document.getElementById('sawerAmount').value).toLocaleString('id-ID');
-      const msg = document.getElementById('sawerMessage').value || 'Semangat terus!';
-
       closeSawerModal();
-      playChime();
-
-      document.getElementById('alertSender').innerText = name;
-      document.getElementById('alertAmount').innerText = `Rp ${amount}`;
-      document.getElementById('alertMessage').innerText = `"${msg}"`;
-
-      const overlay = document.getElementById('alertOverlay');
-      overlay.classList.remove('hidden', 'opacity-0', '-translate-y-10');
-      overlay.classList.add('opacity-100', 'translate-y-0');
-
-      setTimeout(() => {
-        overlay.classList.remove('opacity-100', 'translate-y-0');
-        overlay.classList.add('opacity-0', '-translate-y-10');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
-      }, 5000);
-    }
-
-    function playChime() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
-          gain.gain.setValueAtTime(0.15, ctx.currentTime + idx * 0.1);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.4);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + idx * 0.1);
-          osc.stop(ctx.currentTime + idx * 0.1 + 0.4);
-        });
-      } catch (err) {}
+      showToast('Terima kasih banyak atas dukungan Anda!', 'success');
     }
 
     function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
