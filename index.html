@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaweriaFetch - YouTube 1080p & TikTok Downloader</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            sawer: {
+              gold: '#f59e0b', goldHover: '#d97706', bg: '#0f172a',
+              card: '#1e293b', border: '#334155', text: '#f8fafc', subtext: '#94a3b8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; }
+    .amber-glow { box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25); }
+    .amber-glow-lg { box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.4); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- Alert Banner Overlay (Sawer Simulation) -->
+  <div id="alertOverlay" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden transition-all duration-300 transform -translate-y-10 opacity-0 w-[90%] max-w-md">
+    <div class="bg-slate-800 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl flex items-center gap-4 amber-glow-lg">
+      <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl flex-shrink-0 border border-amber-500/30">
+        <i class="fa-solid fa-mug-hot"></i>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <div class="flex items-center justify-between">
+          <h4 id="alertSender" class="font-bold text-amber-400 truncate text-sm">Orang Baik</h4>
+          <span id="alertAmount" class="text-xs font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">Rp 10.000</span>
+        </div>
+        <p id="alertMessage" class="text-xs text-slate-300 mt-1 italic line-clamp-2">"Semoga bermanfaat websitenya bang!"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navbar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+          S
+        </div>
+        <div>
+          <span class="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
+            Saweria<span class="text-amber-500">Fetch</span>
+          </span>
+          <span class="text-[10px] text-slate-400 block -mt-1 font-medium">YouTube 1080p & TikTok Downloader</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          Node.js Server Active
+        </span>
+        <button onclick="openSawerModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-2">
+          <i class="fa-solid fa-heart"></i>
+          <span>Traktir Kopi</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+
+    <div class="text-center my-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-amber-400 text-xs font-semibold mb-4">
+        <i class="fa-solid fa-bolt"></i> Support 1080p Full HD & Tanpa Iklan
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+        Unduh Video <span class="text-amber-500">YouTube</span> & <span class="text-amber-500">TikTok</span>
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+        Masukkan link video untuk mengunduh format MP4 1080p Full HD atau audio MP3 jernih secara instan.
+      </p>
+    </div>
+
+    <!-- Input Form Card -->
+    <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-6 mb-8 amber-glow">
+      <form id="fetchForm" onsubmit="handleFetch(event)" class="space-y-4">
+        <div class="relative flex items-center">
+          <div id="platformBadge" class="absolute left-4 text-slate-400 text-lg transition-colors">
+            <i class="fa-solid fa-link"></i>
+          </div>
+          <input 
+            type="text" 
+            id="urlInput"
+            placeholder="Paste link YouTube / TikTok di sini..."
+            oninput="detectPlatformOnInput()"
+            class="w-full bg-slate-900 text-white placeholder-slate-500 text-sm sm:text-base rounded-xl pl-12 pr-28 py-3.5 sm:py-4 border border-slate-700 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+            required
+          >
+          <div class="absolute right-2 flex items-center gap-1">
+            <button 
+              type="button" 
+              onclick="pasteClipboard()"
+              class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all"
+              title="Paste dari Clipboard"
+            >
+              <i class="fa-regular fa-paste"></i> Paste
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btnSubmit"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-base py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 group"
+        >
+          <i class="fa-solid fa-download group-hover:translate-y-0.5 transition-transform"></i>
+          <span>Proses Downloader</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading State Skeleton -->
+    <div id="loadingState" class="hidden bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 mb-8 text-center animate-pulse">
+      <div class="inline-block p-4 rounded-full bg-amber-500/10 text-amber-500 mb-3">
+        <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-1">Sedang Memproses Media...</h3>
+      <p class="text-xs text-slate-400">Server Node.js sedang mengekstrak stream video 1080p. Mohon tunggu sejenak.</p>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="errorAlert" class="hidden bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-8 flex items-center gap-3 text-red-400 text-sm">
+      <i class="fa-solid fa-circle-exclamation text-lg flex-shrink-0"></i>
+      <span id="errorMessage">Terjadi kesalahan saat memproses URL.</span>
+    </div>
+
+    <!-- Result Card -->
+    <div id="resultCard" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 mb-8 shadow-xl">
+      <div class="flex flex-col md:flex-row gap-6">
+        <div class="w-full md:w-64 flex-shrink-0 relative group">
+          <img id="resThumbnail" src="" alt="Thumbnail" class="w-full h-44 object-cover rounded-xl border border-slate-700 bg-slate-900">
+          <span id="resBadge" class="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1.5">
+            <i class="fa-brands fa-youtube"></i> YouTube
+          </span>
+          <span id="resDuration" class="absolute bottom-2 right-2 bg-slate-950/90 text-white text-[10px] font-mono px-2 py-0.5 rounded">
+            00:00
+          </span>
+        </div>
+
+        <div class="flex-1 flex flex-col justify-between">
+          <div>
+            <h2 id="resTitle" class="text-lg sm:text-xl font-bold text-white line-clamp-2 mb-2">Title Video...</h2>
+            <p id="resAuthor" class="text-xs text-slate-400 flex items-center gap-1.5 mb-4">
+              <i class="fa-solid fa-user-circle"></i> Uploader
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Pilihan Unduhan:</h3>
+            <div id="downloadButtonsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download History -->
+    <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> Riwayat Unduhan Terakhir
+        </h3>
+        <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition-colors">
+          Hapus Riwayat
+        </button>
+      </div>
+      
+      <div id="historyList" class="space-y-2">
+        <p class="text-xs text-slate-500 text-center py-4">Belum ada riwayat unduhan.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>© 2026 SaweriaFetch. Dibuat untuk kemudahan unduh media.</p>
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:text-amber-400 transition-colors">Syarat & Ketentuan</a>
+        <a href="#" class="hover:text-amber-400 transition-colors">Privasi</a>
+        <button onclick="openSawerModal()" class="text-amber-400 hover:underline">Sawer Admin</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Sawer -->
+  <div id="sawerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeSawerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto mb-2 border border-amber-500/30">
+          <i class="fa-solid fa-mug-hot"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white">Traktir Kopi Developer</h3>
+        <p class="text-xs text-slate-400 mt-1">Dukungan Anda membantu menjaga server tetap aktif!</p>
+      </div>
+
+      <form onsubmit="handleSawerSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Nama / Nickname</label>
+          <input type="text" id="sawerName" placeholder="Orang Baik" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Nominal (Rp)</label>
+          <input type="number" id="sawerAmount" value="10000" min="5000" step="1000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Pesan Dukungan</label>
+          <textarea id="sawerMessage" rows="2" placeholder="Semangat terus min!" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all mt-2">
+          Kirim Saweran (Simulasi)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Otomatis deteksi host domain aktif di mana pun berada
+    const BACKEND_BASE_URL = window.location.origin;
+    const API_FETCH_URL = `${BACKEND_BASE_URL}/api/fetch`;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHistory();
+    });
+
+    function detectPlatformOnInput() {
+      const url = document.getElementById('urlInput').value.trim();
+      const badge = document.getElementById('platformBadge');
+
+      if (/youtube\.com|youtu\.be/i.test(url)) {
+        badge.innerHTML = '<i class="fa-brands fa-youtube text-red-500"></i>';
+      } else if (/tiktok\.com/i.test(url)) {
+        badge.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400"></i>';
+      } else {
+        badge.innerHTML = '<i class="fa-solid fa-link text-slate-400"></i>';
+      }
+    }
+
+    async function pasteClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById('urlInput').value = text;
+        detectPlatformOnInput();
+      } catch (err) {
+        alert('Gagal membaca clipboard. Silakan paste manual (Ctrl+V).');
+      }
+    }
+
+    async function handleFetch(event) {
+      event.preventDefault();
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) return;
+
+      hideElement('resultCard');
+      hideElement('errorAlert');
+      showElement('loadingState');
+
+      try {
+        const response = await fetch(API_FETCH_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await response.json();
+
+        if (data.status) {
+          renderResult(data);
+          saveToHistory(data);
+        } else {
+          showError(data.message || 'Gagal memproses video.');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        showError('Tidak dapat terhubung ke Server Backend. Pastikan server aktif.');
+      } finally {
+        hideElement('loadingState');
+      }
+    }
+
+    function renderResult(data) {
+      document.getElementById('resThumbnail').src = data.thumbnail || 'https://via.placeholder.com/400x225?text=No+Thumbnail';
+      document.getElementById('resTitle').innerText = data.title;
+      document.getElementById('resAuthor').innerText = `Uploader: ${data.author || 'Unknown'}`;
+      document.getElementById('resDuration').innerText = data.duration || 'N/A';
+
+      const badge = document.getElementById('resBadge');
+      if (data.platform === 'youtube') {
+        badge.innerHTML = '<i class="fa-brands fa-youtube text-red-500"></i> YouTube';
+      } else {
+        badge.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400"></i> TikTok';
+      }
+
+      const grid = document.getElementById('downloadButtonsGrid');
+      grid.innerHTML = '';
+
+      if (data.downloads && data.downloads.length > 0) {
+        data.downloads.forEach(dl => {
+          const isAudio = dl.type === 'audio';
+          let downloadUrl = dl.url;
+
+          if (downloadUrl.startsWith('/api/')) {
+            downloadUrl = `${BACKEND_BASE_URL}${dl.url}`;
+          }
+
+          const btn = document.createElement('a');
+          btn.href = downloadUrl;
+
+          // Jika URL dari proxy internal /api/download, jangan buka tab baru agar file langsung terunduh
+          if (!downloadUrl.includes('/api/download')) {
+            btn.target = "_blank";
+            btn.rel = "noopener noreferrer";
+          }
+
+          btn.className = `flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${
+            isAudio 
+              ? 'bg-slate-900 border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-slate-950' 
+              : 'bg-amber-500 border-amber-500 text-slate-950 hover:bg-amber-600'
+          }`;
+          btn.innerHTML = `
+            <span class="flex items-center gap-2">
+              <i class="fa-solid ${isAudio ? 'fa-music' : 'fa-video'}"></i>
+              ${dl.quality}
+            </span>
+            <i class="fa-solid fa-download flex-shrink-0"></i>
+          `;
+          grid.appendChild(btn);
+        });
+      } else {
+        grid.innerHTML = '<p class="text-xs text-slate-400 col-span-2">Tidak ada link unduhan tersedia.</p>';
+      }
+
+      showElement('resultCard');
+    }
+
+    function saveToHistory(item) {
+      let history = JSON.parse(localStorage.getItem('sawer_history') || '[]');
+      history.unshift({
+        title: item.title,
+        platform: item.platform,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      history = history.slice(0, 5);
+      localStorage.setItem('sawer_history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('sawer_history') || '[]');
+      const container = document.getElementById('historyList');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Belum ada riwayat unduhan.</p>';
+        return;
+      }
+
+      container.innerHTML = history.map(h => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+          <div class="flex items-center gap-2 overflow-hidden mr-2">
+            <i class="fa-brands ${h.platform === 'youtube' ? 'fa-youtube text-red-500' : 'fa-tiktok text-cyan-400'}"></i>
+            <span class="text-slate-300 truncate">${h.title}</span>
+          </div>
+          <span class="text-[10px] text-slate-500 flex-shrink-0">${h.time}</span>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('sawer_history');
+      renderHistory();
+    }
+
+    function openSawerModal() { showElement('sawerModal'); }
+    function closeSawerModal() { hideElement('sawerModal'); }
+
+    function handleSawerSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('sawerName').value || 'Orang Baik';
+      const amount = parseInt(document.getElementById('sawerAmount').value).toLocaleString('id-ID');
+      const msg = document.getElementById('sawerMessage').value || 'Semangat terus!';
+
+      closeSawerModal();
+      playChime();
+
+      document.getElementById('alertSender').innerText = name;
+      document.getElementById('alertAmount').innerText = `Rp ${amount}`;
+      document.getElementById('alertMessage').innerText = `"${msg}"`;
+
+      const overlay = document.getElementById('alertOverlay');
+      overlay.classList.remove('hidden', 'opacity-0', '-translate-y-10');
+      overlay.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        overlay.classList.remove('opacity-100', 'translate-y-0');
+        overlay.classList.add('opacity-0', '-translate-y-10');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }, 5000);
+    }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.1);
+          osc.stop(ctx.currentTime + idx * 0.1 + 0.4);
+        });
+      } catch (err) {}
+    }
+
+    function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
+    function hideElement(id) { document.getElementById(id)?.classList.add('hidden'); }
+    function showError(msg) {
+      document.getElementById('errorMessage').innerText = msg;
+      showElement('errorAlert');
+    }
+  </script>
+</body>
+</html>
