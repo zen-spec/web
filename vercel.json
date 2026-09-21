@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://app-1.tsrv.biz.id:3044/api/:path*"
+    }
+  ]
+}
