@@ -1,13 +1,14 @@
 """
 VidSnap Backend API
+===================
 FastAPI + yt-dlp untuk download YouTube & TikTok
 
 Endpoint:
-POST /api/info          → Ambil info video (title, thumbnail, formats)
-POST /api/download-url  → Dapatkan URL download langsung (dari yt-dlp)
-GET  /api/stream        → Proxy download file (WAJIB dipakai untuk TikTok,
-                          karena CDN TikTok menolak hotlink langsung dari
-                          browser user / 403 Forbidden Varnish)
+  POST /api/info          → Ambil info video (title, thumbnail, formats)
+  POST /api/download-url  → Dapatkan URL download langsung (dari yt-dlp)
+  GET  /api/stream        → Proxy download file (WAJIB dipakai untuk TikTok,
+                             karena CDN TikTok menolak hotlink langsung dari
+                             browser user / 403 Forbidden Varnish)
 
 Deploy ke Railway / Render / VPS
 """
@@ -17,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import yt_dlp
+import httpx
 import re
 import os
 
@@ -26,7 +28,6 @@ REFERER_MAP = {
     "youtube": "https://www.youtube.com/",
     "tiktok": "https://www.tiktok.com/",
 }
-
 DOWNLOAD_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
@@ -67,9 +68,9 @@ class DownloadUrlRequest(BaseModel):
 # ============================================================
 def is_valid_url(url: str, platform: str) -> bool:
     if platform == "youtube":
-        return bool(re.search(r'(youtube.com|youtu.be)', url, re.I))
+        return bool(re.search(r'(youtube\.com|youtu\.be)', url, re.I))
     elif platform == "tiktok":
-        return bool(re.search(r'(tiktok.com|vm.tiktok.com|vt.tiktok.com)', url, re.I))
+        return bool(re.search(r'(tiktok\.com|vm\.tiktok\.com|vt\.tiktok\.com)', url, re.I))
     return False
 
 def format_duration(seconds: int) -> str:
@@ -81,6 +82,43 @@ def format_duration(seconds: int) -> str:
     if h > 0:
         return f"{h}:{m:02d}:{s:02d}"
     return f"{m}:{s:02d}"
+
+def make_tikwm_url(url_or_path: str) -> str:
+    if not url_or_path:
+        return ""
+    if url_or_path.startswith("http://") or url_or_path.startswith("https://"):
+        return url_or_path
+    return f"https://www.tikwm.com{url_or_path}"
+
+async def fetch_tiktok_tikwm(url: str) -> dict | None:
+    """Ambil data TikTok bebas watermark & anti-403 dari TikWM API gratis (no auth/no key required)."""
+    canonical_url = url
+    try:
+        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
+            # Jika link pendek (vt.tiktok.com atau vm.tiktok.com), follow redirect terlebih dahulu
+            if "vt.tiktok.com" in url or "vm.tiktok.com" in url:
+                try:
+                    head_res = await client.head(url, headers={"User-Agent": DOWNLOAD_USER_AGENT})
+                    if str(head_res.url) and "tiktok.com" in str(head_res.url):
+                        canonical_url = str(head_res.url)
+                except Exception:
+                    pass
+
+            resp = await client.post(
+                "https://www.tikwm.com/api/",
+                data={"url": canonical_url, "count": 12, "cursor": 0, "web": 1, "hd": 1},
+                headers={
+                    "User-Agent": DOWNLOAD_USER_AGENT,
+                    "Accept": "application/json",
+                }
+            )
+            if resp.status_code == 200:
+                body = resp.json()
+                if body.get("code") == 0 and body.get("data"):
+                    return body["data"]
+    except Exception as e:
+        print(f"[TikWM] Fetch error: {e}")
+    return None
 
 def build_ydl_opts(platform: str, format_str: str = None) -> dict:
     """Konfigurasi yt-dlp dengan bypass bot/login YouTube untuk cloud server (Render/Railway)"""
@@ -107,11 +145,11 @@ def build_ydl_opts(platform: str, format_str: str = None) -> dict:
             }
         }
     elif platform == "tiktok":
-        opts["format"] = "download_addr-0/best"
-        
+        opts["format"] = "best[ext=mp4]/best"
+
     if format_str:
         opts["format"] = format_str
-        
+
     # Dukungan cookies jika user menyediakan cookies.txt atau environment variable
     cookie_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
     if os.path.exists(cookie_path):
@@ -124,12 +162,13 @@ def build_ydl_opts(platform: str, format_str: str = None) -> dict:
             opts["cookiefile"] = temp_cookie
         except Exception:
             pass
-            
+
     return opts
 
 def explain_download_error(e: Exception) -> str:
     """Ubah error mentah yt-dlp jadi pesan yang jelas & actionable untuk user."""
     error_msg = str(e)
+
     if "Private video" in error_msg:
         return "Video bersifat private dan tidak dapat diakses."
     if "Video unavailable" in error_msg:
@@ -137,6 +176,11 @@ def explain_download_error(e: Exception) -> str:
     if "This video is not available" in error_msg or "geo" in error_msg.lower():
         return "Video tidak tersedia di lokasi server (kemungkinan dibatasi wilayah/geo-blocked)."
     if "Sign in to confirm" in error_msg or "confirm you're not a bot" in error_msg or "Sign in" in error_msg:
+        # Ini BUKAN soal video tertentu — YouTube mendeteksi IP server cloud
+        # (Railway/Render dsb) sebagai bot dan meminta verifikasi login.
+        # Satu-satunya perbaikan yang stabil adalah menyuplai cookies dari
+        # akun YouTube yang sudah login (lihat README bagian "Mengatasi
+        # error verifikasi login/bot").
         return (
             "YouTube meminta verifikasi login karena IP server ini terdeteksi sebagai bot "
             "(masalah umum di hosting cloud seperti Railway/Render, bukan soal video/link "
@@ -170,6 +214,7 @@ def get_youtube_formats(info: dict) -> list:
             if abs(fh - h) <= 50 and f.get("ext") in ["mp4", "webm"]:
                 if best_match is None or (f.get("filesize") or 0) > (best_match.get("filesize") or 0):
                     best_match = f
+
         if best_match and best_match.get("format_id") not in seen:
             seen.add(best_match["format_id"])
             result.append({
@@ -221,11 +266,42 @@ async def get_video_info(req: VideoInfoRequest):
             detail=f"URL tidak valid untuk platform {platform}."
         )
 
+    # Prioritaskan TikWM Scraper API untuk TikTok (100% gratis, anti-403, bebas watermark)
+    if platform == "tiktok":
+        tikwm_data = await fetch_tiktok_tikwm(url)
+        if tikwm_data:
+            cover = make_tikwm_url(tikwm_data.get("cover") or tikwm_data.get("origin_cover", ""))
+            author = tikwm_data.get("author", {})
+            uploader = author.get("nickname") or author.get("unique_id", "")
+            duration = int(tikwm_data.get("duration") or 0)
+            title = tikwm_data.get("title") or "TikTok Video"
+
+            formats = [
+                {"format_id": "best", "label": "Full HD (Tanpa Watermark)", "ext": "mp4"},
+            ]
+            if tikwm_data.get("wmplay"):
+                formats.append({"format_id": "watermark", "label": "SD (Dengan Watermark)", "ext": "mp4"})
+            if tikwm_data.get("music"):
+                formats.append({"format_id": "bestaudio/best", "label": "🎵 MP3 Audio", "ext": "mp3"})
+
+            return {
+                "platform": "tiktok",
+                "title": title,
+                "thumbnail": cover,
+                "duration": duration,
+                "uploader": uploader,
+                "view_count": tikwm_data.get("play_count"),
+                "like_count": tikwm_data.get("digg_count"),
+                "formats": formats
+            }
+
+    # Fallback / YouTube: gunakan yt-dlp
     ydl_opts = build_ydl_opts(platform)
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+
             if not info:
                 raise HTTPException(status_code=404, detail="Video tidak ditemukan.")
 
@@ -268,8 +344,35 @@ async def get_download_url(req: DownloadUrlRequest):
     if not is_valid_url(url, platform):
         raise HTTPException(status_code=400, detail="URL tidak valid.")
 
+    # Prioritaskan TikWM untuk TikTok (anti-403 & direct stream)
     if platform == "tiktok":
-        fmt = "download_addr-0/best"
+        tikwm_data = await fetch_tiktok_tikwm(url)
+        if tikwm_data:
+            ext = "mp4"
+            filesize = tikwm_data.get("size")
+
+            if format_id in ["bestaudio/best", "music"]:
+                download_url = make_tikwm_url(tikwm_data.get("music", ""))
+                ext = "mp3"
+            elif format_id == "watermark":
+                download_url = make_tikwm_url(tikwm_data.get("wmplay") or tikwm_data.get("play", ""))
+            else:
+                download_url = make_tikwm_url(
+                    tikwm_data.get("hdplay") or tikwm_data.get("play", "")
+                )
+
+            if download_url:
+                title = tikwm_data.get("title") or "TikTok Video"
+                return {
+                    "download_url": download_url,
+                    "title": title,
+                    "ext": ext,
+                    "filesize": filesize,
+                }
+
+    # Format selector untuk yt-dlp (YouTube & TikTok fallback)
+    if platform == "tiktok":
+        fmt = "best[ext=mp4]/best"
     elif format_id == "bestaudio/best":
         fmt = "bestaudio/best"
     elif format_id in ["best", "best[ext=mp4]/best"]:
@@ -282,10 +385,12 @@ async def get_download_url(req: DownloadUrlRequest):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+
             if not info:
                 raise HTTPException(status_code=404, detail="Video tidak ditemukan.")
 
             download_url = None
+
             if "url" in info:
                 download_url = info["url"]
             elif "requested_formats" in info:
@@ -333,43 +438,63 @@ async def get_download_url(req: DownloadUrlRequest):
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)[:200]}")
 
 # ----------------------------------------------------------
-# PROXY DOWNLOAD (WAJIB untuk TikTok — hindari 403 dari CDN)
-# Menggunakan yt-dlp internal opener untuk bypass TLS fingerprinting CDN.
+# PROXY DOWNLOAD (WAJIB untuk TikTok & YouTube — hindari 403 dari CDN)
 # ----------------------------------------------------------
 @app.get("/api/stream")
 async def stream_download(media_url: str, platform: str = "youtube", filename: str = "video", ext: str = "mp4"):
     """
-    Proxy download menggunakan internal opener yt-dlp.
-    Ini menghindari 403 Forbidden karena menggunakan TLS fingerprint,
-    headers, dan cookies yang SAMA PERSIS dengan yang digunakan yt-dlp
-    saat mengambil info video. httpx sering diblokir oleh CDN TikTok
-    karena TLS fingerprint-nya terdeteksi sebagai bot dari IP Datacenter.
+    Backend yang fetch file dari CDN sumber (dengan Referer/User-Agent yang
+    benar), lalu stream ke user. Ini menghindari 403 Forbidden yang muncul
+    kalau browser user langsung request ke CDN TikTok/YouTube tanpa header
+    yang sesuai (CDN mereka menolak hotlink telanjang).
     """
+    platform = platform.lower()
+    if "tikwm.com" in media_url:
+        referer = "https://www.tikwm.com/"
+    else:
+        referer = REFERER_MAP.get(platform, "https://www.google.com/")
+
+    headers = {
+        "User-Agent": DOWNLOAD_USER_AGENT,
+        "Referer": referer,
+        "Accept": "*/*",
+    }
+
+    client = httpx.AsyncClient(follow_redirects=True, timeout=60.0)
+    try:
+        req = client.build_request("GET", media_url, headers=headers)
+        resp = await client.send(req, stream=True)
+    except httpx.RequestError as e:
+        await client.aclose()
+        raise HTTPException(status_code=502, detail=f"Gagal menghubungi server sumber video: {str(e)[:150]}")
+
+    if resp.status_code >= 400:
+        await resp.aclose()
+        await client.aclose()
+        raise HTTPException(
+            status_code=422,
+            detail=f"CDN sumber menolak download (HTTP {resp.status_code}). Link mungkin sudah kedaluwarsa — coba Ambil Info ulang."
+        )
+
     safe_name = re.sub(r'[<>:"/\\|?*]', '', filename)[:80].strip() or "vidsnap"
+
+    async def body_iterator():
+        try:
+            async for chunk in resp.aiter_bytes(chunk_size=65536):
+                yield chunk
+        finally:
+            await resp.aclose()
+            await client.aclose()
+
+    # CATATAN: sengaja TIDAK meneruskan header Content-Length dari CDN sumber.
+    # httpx men-dekompres body otomatis (mis. gzip/br) di aiter_bytes, jadi
+    # ukuran body yang benar-benar dikirim bisa beda dari Content-Length asli
+    # → kalau dipaksa diteruskan, uvicorn crash "Response content longer than
+    # Content-Length". Biarkan FastAPI pakai chunked transfer encoding.
     resp_headers = {"Content-Disposition": f'attachment; filename="{safe_name}.{ext}"'}
 
-    ydl_opts = build_ydl_opts(platform)
-    ydl_opts['skip_download'] = True  # Pastikan tidak mendownload ke disk server
-
-    def iterfile():
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # ydl.urlopen() menggunakan urllib internal yt-dlp.
-                # Ini SANGAT PENTING untuk TikTok karena menggunakan TLS fingerprint
-                # yang sama persis dengan saat yt-dlp mengambil URL video.
-                res = ydl.urlopen(media_url)
-                
-                while True:
-                    chunk = res.read(65536)  # Baca per 64KB
-                    if not chunk:
-                        break
-                    yield chunk
-        except Exception as e:
-            print(f"[Stream Error] {e}")
-            yield b""  # Yield kosong jika terjadi error agar tidak crash
-
     return StreamingResponse(
-        iterfile(),
-        media_type="video/mp4" if ext == "mp4" else "audio/mpeg",
-        headers=resp_headers
+        body_iterator(),
+        media_type=resp.headers.get("content-type", "application/octet-stream"),
+        headers=resp_headers,
     )
