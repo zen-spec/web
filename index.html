@@ -18,7 +18,6 @@
             color: #fff;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 40px 20px 20px;
@@ -38,11 +37,66 @@
             font-size: 1.1rem;
         }
 
-        /* Container */
         .container {
-            max-width: 700px;
+            max-width: 800px;
             margin: 30px auto;
             padding: 0 20px;
+        }
+
+        /* Tutorial Section */
+        .tutorial {
+            background: rgba(72, 219, 251, 0.1);
+            border: 2px solid rgba(72, 219, 251, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .tutorial h2 {
+            color: #48dbfb;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tutorial-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .step-number {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #48dbfb, #0abde3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #a0a0b0;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         /* Tabs */
@@ -93,7 +147,6 @@
             box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
         }
 
-        /* Input Section */
         .input-section {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -148,7 +201,6 @@
             background: rgba(72, 219, 251, 0.4);
         }
 
-        /* Format Selection */
         .format-section {
             margin-bottom: 20px;
         }
@@ -188,7 +240,6 @@
             color: #48dbfb;
         }
 
-        /* Download Button */
         .download-btn {
             width: 100%;
             padding: 18px;
@@ -219,11 +270,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .download-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Loading */
         .loading {
             display: none;
             text-align: center;
@@ -248,7 +294,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Result */
         .result {
             display: none;
             margin-top: 25px;
@@ -266,6 +311,20 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-header h2 {
+            color: #48dbfb;
+            font-size: 1.2rem;
         }
 
         .result-video {
@@ -303,35 +362,59 @@
             gap: 10px;
         }
 
+        .download-instruction {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .download-instruction p {
+            color: #ffc107;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .result-dl-btn {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 18px;
+            padding: 15px 18px;
             border-radius: 10px;
             background: rgba(72, 219, 251, 0.1);
-            border: 1px solid rgba(72, 219, 251, 0.2);
+            border: 2px solid rgba(72, 219, 251, 0.2);
             color: #48dbfb;
             text-decoration: none;
             transition: all 0.3s ease;
             cursor: pointer;
+            font-weight: 600;
         }
 
         .result-dl-btn:hover {
             background: rgba(72, 219, 251, 0.2);
+            border-color: #48dbfb;
             transform: translateX(5px);
         }
 
         .result-dl-btn .quality {
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-dl-btn .download-icon {
+            font-size: 1.2rem;
         }
 
         .result-dl-btn .size {
             font-size: 0.85rem;
             color: #a0a0b0;
+            font-weight: normal;
         }
 
-        /* Features */
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -370,7 +453,6 @@
             line-height: 1.5;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
             padding: 30px;
@@ -379,7 +461,6 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Responsive */
         @media (max-width: 600px) {
             .header h1 {
                 font-size: 1.8rem;
@@ -399,9 +480,12 @@
                 width: 100%;
                 height: 120px;
             }
+
+            .tutorial {
+                padding: 20px;
+            }
         }
 
-        /* Notification */
         .notification {
             position: fixed;
             top: 20px;
@@ -423,21 +507,57 @@
         .notification.error {
             background: rgba(255, 71, 87, 0.9);
         }
+
+        .notification.success {
+            background: rgba(46, 213, 115, 0.9);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Notification -->
     <div class="notification" id="notification"></div>
 
-    <!-- Header -->
     <div class="header">
         <h1>⚡ SaveTube</h1>
         <p>Download video TikTok & YouTube dengan mudah dan gratis</p>
     </div>
 
-    <!-- Main Container -->
     <div class="container">
+        <!-- Tutorial Section -->
+        <div class="tutorial">
+            <h2>📖 Cara Menggunakan</h2>
+            <div class="tutorial-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Copy Link Video</h3>
+                        <p>Buka TikTok/YouTube, cari video yang mau didownload, lalu copy link-nya</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Pilih Platform</h3>
+                        <p>Klik tab "TikTok" atau "YouTube" sesuai video yang mau didownload</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Paste Link</h3>
+                        <p>Tempel link di kolom input, atau klik tombol "Paste" untuk otomatis</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Pilih Format & Download</h3>
+                        <p>Pilih kualitas video (MP4/MP3/HD), klik "Download Sekarang", lalu klik tombol download yang muncul</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn tiktok active" onclick="switchTab('tiktok')">
@@ -455,7 +575,6 @@
                 <button class="paste-btn" onclick="pasteFromClipboard()">📋 Paste</button>
             </div>
 
-            <!-- Format Selection -->
             <div class="format-section" id="formatSection">
                 <label>Pilih Format:</label>
                 <div class="format-options">
@@ -465,7 +584,6 @@
                 </div>
             </div>
 
-            <!-- Download Button -->
             <button class="download-btn tiktok-btn" id="downloadBtn" onclick="processDownload()">
                 ⬇️ Download Sekarang
             </button>
@@ -479,6 +597,10 @@
 
         <!-- Result -->
         <div class="result" id="result">
+            <div class="result-header">
+                <h2>✅ Video Siap Download!</h2>
+            </div>
+            
             <div class="result-video">
                 <div class="result-thumb" id="resultThumb">🎬</div>
                 <div class="result-info">
@@ -486,6 +608,11 @@
                     <p id="resultDuration">⏱ 0:00 • 👁 1.2M views</p>
                 </div>
             </div>
+
+            <div class="download-instruction">
+                <p>💡 <strong>Klik salah satu tombol di bawah untuk mulai download:</strong></p>
+            </div>
+
             <div class="result-downloads" id="resultDownloads">
                 <!-- Dynamic download links -->
             </div>
@@ -516,7 +643,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <div class="footer">
         <p>© 2024 SaveTube - Gratis & Tanpa Iklan</p>
         <p style="margin-top: 5px;">Tidak berafiliasi dengan TikTok atau YouTube</p>
@@ -529,11 +655,9 @@
         function switchTab(tab) {
             currentTab = tab;
             
-            // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-btn.${tab}`).classList.add('active');
 
-            // Update placeholder
             const input = document.getElementById('urlInput');
             if (tab === 'tiktok') {
                 input.placeholder = 'Tempel link TikTok di sini...';
@@ -543,10 +667,7 @@
                 document.getElementById('downloadBtn').className = 'download-btn youtube-btn';
             }
 
-            // Update format options
             updateFormatOptions();
-
-            // Hide result
             document.getElementById('result').classList.remove('show');
         }
 
@@ -585,9 +706,9 @@
             try {
                 const text = await navigator.clipboard.readText();
                 document.getElementById('urlInput').value = text;
-                showNotification('Link berhasil ditempel!');
+                showNotification('Link berhasil ditempel!', 'success');
             } catch (err) {
-                showNotification('Gagal membaca clipboard. Tempel manual ya!', true);
+                showNotification('Gagal membaca clipboard. Tempel manual ya!', 'error');
             }
         }
 
@@ -595,25 +716,22 @@
             const url = document.getElementById('urlInput').value.trim();
             
             if (!url) {
-                showNotification('Masukkan link terlebih dahulu!', true);
+                showNotification('Masukkan link terlebih dahulu!', 'error');
                 return;
             }
 
-            // Validate URL
             if (currentTab === 'tiktok' && !url.includes('tiktok.com')) {
-                showNotification('Masukkan link TikTok yang valid!', true);
+                showNotification('Masukkan link TikTok yang valid!', 'error');
                 return;
             }
             if (currentTab === 'youtube' && !url.includes('youtube.com') && !url.includes('youtu.be')) {
-                showNotification('Masukkan link YouTube yang valid!', true);
+                showNotification('Masukkan link YouTube yang valid!', 'error');
                 return;
             }
 
-            // Show loading
             document.getElementById('loading').classList.add('show');
             document.getElementById('result').classList.remove('show');
 
-            // Simulate processing (in real app, this would call an API)
             setTimeout(() => {
                 document.getElementById('loading').classList.remove('show');
                 showResult(url);
@@ -632,16 +750,25 @@
                 duration.textContent = '⏱ 0:30 • ❤️ 45.2K likes';
                 thumb.textContent = '🎵';
                 downloads.innerHTML = `
-                    <div class="result-dl-btn" onclick="downloadFile('video_no_wm')">
-                        <span class="quality">📹 Video Tanpa Watermark</span>
+                    <div class="result-dl-btn" onclick="downloadFile('video_no_wm', 'tiktok_video_no_watermark.mp4')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            Video Tanpa Watermark
+                        </span>
                         <span class="size">~8.5 MB</span>
                     </div>
-                    <div class="result-dl-btn" onclick="downloadFile('video_wm')">
-                        <span class="quality">📹 Video + Watermark</span>
+                    <div class="result-dl-btn" onclick="downloadFile('video_wm', 'tiktok_video.mp4')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            Video + Watermark
+                        </span>
                         <span class="size">~9.2 MB</span>
                     </div>
-                    <div class="result-dl-btn" onclick="downloadFile('audio')">
-                        <span class="quality">🎵 Audio MP3</span>
+                    <div class="result-dl-btn" onclick="downloadFile('audio', 'tiktok_audio.mp3')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            Audio MP3
+                        </span>
                         <span class="size">~2.1 MB</span>
                     </div>
                 `;
@@ -650,43 +777,69 @@
                 duration.textContent = '⏱ 12:34 • 👁 2.5M views';
                 thumb.textContent = '▶️';
                 downloads.innerHTML = `
-                    <div class="result-dl-btn" onclick="downloadFile('720p')">
-                        <span class="quality">📹 MP4 720p</span>
+                    <div class="result-dl-btn" onclick="downloadFile('720p', 'youtube_video_720p.mp4')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            MP4 720p
+                        </span>
                         <span class="size">~45 MB</span>
                     </div>
-                    <div class="result-dl-btn" onclick="downloadFile('1080p')">
-                        <span class="quality">📹 MP4 1080p Full HD</span>
+                    <div class="result-dl-btn" onclick="downloadFile('1080p', 'youtube_video_1080p.mp4')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            MP4 1080p Full HD
+                        </span>
                         <span class="size">~120 MB</span>
                     </div>
-                    <div class="result-dl-btn" onclick="downloadFile('mp3')">
-                        <span class="quality">🎵 MP3 Audio 320kbps</span>
+                    <div class="result-dl-btn" onclick="downloadFile('mp3', 'youtube_audio.mp3')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            MP3 Audio 320kbps
+                        </span>
                         <span class="size">~12 MB</span>
                     </div>
-                    <div class="result-dl-btn" onclick="downloadFile('webm')">
-                        <span class="quality">📹 WebM 1080p</span>
+                    <div class="result-dl-btn" onclick="downloadFile('webm', 'youtube_video.webm')">
+                        <span class="quality">
+                            <span class="download-icon">⬇️</span>
+                            WebM 1080p
+                        </span>
                         <span class="size">~95 MB</span>
                     </div>
                 `;
             }
 
             result.classList.add('show');
-            showNotification('Video berhasil diproses!');
+            showNotification('Video berhasil diproses! Klik tombol download di bawah.', 'success');
+            
+            // Scroll to result
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function downloadFile(type) {
-            showNotification(`Memulai download ${type.toUpperCase()}...`);
+        function downloadFile(type, filename) {
+            showNotification(`Memulai download ${filename}...`, 'success');
             
-            // In a real application, this would trigger the actual download
-            // For demo purposes, we'll show a notification
+            // Simulate download
             setTimeout(() => {
-                showNotification('Download dimulai! Cek folder download Anda.');
+                // In real app, this would be: window.location.href = `/api/download?url=${encodeURIComponent(url)}&format=${type}`;
+                showNotification(`Download ${filename} dimulai! Cek folder Downloads Anda.`, 'success');
+                
+                // Create a dummy download for demo
+                const blob = new Blob(['Demo file - ini contoh saja'], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
             }, 1000);
         }
 
-        function showNotification(message, isError = false) {
+        function showNotification(message, type = 'info') {
             const notif = document.getElementById('notification');
             notif.textContent = message;
-            notif.className = 'notification' + (isError ? ' error' : '');
+            notif.className = 'notification ' + type;
             
             setTimeout(() => notif.classList.add('show'), 10);
             
@@ -695,7 +848,6 @@
             }, 3000);
         }
 
-        // Enter key support
         document.getElementById('urlInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 processDownload();
