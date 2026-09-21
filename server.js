@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const ytdl = require('@distube/ytdl-core');
-const tiktok = require('tiktok-scraper');
+const tiktok = require('@tobyg74/tiktok-api-dl');
 const path = require('path');
 
 const app = express();
@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Endpoint YouTube
+// ============ YOUTUBE ============
 app.post('/api/youtube', async (req, res) => {
   try {
     const { url } = req.body;
@@ -18,64 +18,78 @@ app.post('/api/youtube', async (req, res) => {
     }
 
     const info = await ytdl.getInfo(url);
-    const formats = info.formats
-      .filter(f => f.hasVideo && f.hasAudio)
-      .map(f => ({
-        quality: f.qualityLabel,
-        url: f.url,
-        mimeType: f.mimeType,
-        itag: f.itag
-      }));
 
-    // Audio only
-    const audio = info.formats
+    // Video + audio
+    const videoFormats = info.formats
+      .filter(f => f.hasVideo && f.hasAudio && f.container === 'mp4')
+      .map(f => ({
+        quality: f.qualityLabel || 'unknown',
+        url: f.url,
+        itag: f.itag
+      }))
+      .filter((v, i, arr) => arr.findIndex(x => x.quality === v.quality) === i)
+      .slice(0, 5);
+
+    // Audio saja
+    const audioFormats = info.formats
       .filter(f => !f.hasVideo && f.hasAudio)
       .map(f => ({
-        quality: f.audioBitrate + 'kbps',
-        url: f.url,
-        mimeType: f.mimeType
-      }));
+        quality: (f.audioBitrate || 128) + 'kbps',
+        url: f.url
+      }))
+      .filter((v, i, arr) => arr.findIndex(x => x.quality === v.quality) === i)
+      .slice(0, 3);
 
     res.json({
       title: info.videoDetails.title,
       thumbnail: info.videoDetails.thumbnails.pop().url,
       duration: info.videoDetails.lengthSeconds,
       author: info.videoDetails.author.name,
-      videoFormats: formats.slice(0, 5),
-      audioFormats: audio.slice(0, 3)
+      videoFormats,
+      audioFormats
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Gagal ambil video: ' + err.message });
   }
 });
 
-// Endpoint TikTok
+// ============ TIKTOK ============
 app.post('/api/tiktok', async (req, res) => {
   try {
     const { url } = req.body;
-    const videoMeta = await tiktok.getVideoMeta(url, {});
-    
+    const result = await tiktok.Downloader(url, { version: 'v1' });
+
+    if (result.status !== 'success') {
+      return res.status(400).json({ error: 'Gagal ambil video TikTok' });
+    }
+
+    const data = result.result;
     res.json({
-      title: videoMeta.collector[0].text,
-      thumbnail: videoMeta.collector[0].imageUrl,
-      author: videoMeta.collector[0].authorMeta.name,
-      videoUrl: videoMeta.collector[0].videoUrl,
-      videoUrlNoWatermark: videoMeta.collector[0].videoUrlNoWaterMark,
-      music: videoMeta.collector[0].musicMeta
+      title: data.desc || 'TikTok Video',
+      thumbnail: data.cover?.[0] || data.cover,
+      author: data.author?.nickname || data.author?.unique_id || 'Unknown',
+      videoUrl: data.video?.playAddr?.[0] || data.video?.playAddr,
+      videoUrlNoWatermark: data.video?.downloadAddr?.[0] || data.video?.downloadAddr,
+      music: data.music
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Gagal ambil video: ' + err.message });
   }
 });
 
-// Proxy download (agar tidak kena CORS)
+// ============ PROXY DOWNLOAD ============
 app.get('/api/download', async (req, res) => {
   try {
     const { url, filename } = req.query;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
     res.setHeader('Content-Disposition', `attachment; filename="${filename || 'video.mp4'}"`);
-    res.setHeader('Content-Type', response.headers.get('content-type'));
-    
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'video/mp4');
+
     const reader = response.body.getReader();
     const pump = async () => {
       const { done, value } = await reader.read();
@@ -90,4 +104,6 @@ app.get('/api/download', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server jalan di http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`\n✅ Server jalan di: http://localhost:${PORT}\n`);
+});
