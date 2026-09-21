@@ -1,8 +1,12 @@
 {
-  "name": "saweria-downloader-backend",
+  "name": "saweria-downloader",
   "version": "1.0.0",
-  "description": "Saweria Downloader Vercel Backend",
+  "description": "YouTube & TikTok Downloader ala Saweria",
   "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
+  },
   "dependencies": {
     "@maxinminax/tiktok-api-dl": "^1.0.0",
     "@vreden/youtube_scraper": "^2.9.0",
