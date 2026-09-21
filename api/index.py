@@ -12,6 +12,7 @@ import yt_dlp
 import httpx
 import re
 import os
+import tempfile
 
 REFERER_MAP = {
     "youtube": "https://www.youtube.com/",
@@ -124,17 +125,26 @@ def build_ydl_opts(platform: str, format_str: str = None) -> dict:
     if format_str:
         opts["format"] = format_str
 
-    cookie_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
-    if os.path.exists(cookie_path):
-        opts["cookiefile"] = cookie_path
-    elif os.environ.get("YOUTUBE_COOKIES"):
-        temp_cookie = os.path.join(os.path.dirname(__file__), "temp_cookies.txt")
+    # Di Vercel Serverless (AWS Lambda), direktori /var/task bersifat READ-ONLY.
+    # yt-dlp selalu mencoba menulis balik update sesi/cookies ke cookiefile.
+    # Maka, salin/tulis cookies ke folder /tmp (yang 100% writable di serverless).
+    writable_cookie = os.path.join(tempfile.gettempdir(), "vidsnap_cookies.txt")
+
+    source_cookie = os.path.join(os.path.dirname(__file__), "cookies.txt")
+    if os.path.exists(source_cookie):
         try:
-            with open(temp_cookie, "w", encoding="utf-8") as f:
+            with open(source_cookie, "r", encoding="utf-8") as src, open(writable_cookie, "w", encoding="utf-8") as dst:
+                dst.write(src.read())
+            opts["cookiefile"] = writable_cookie
+        except Exception as e:
+            print(f"[Cookies] Gagal copy cookies ke /tmp: {e}")
+    elif os.environ.get("YOUTUBE_COOKIES"):
+        try:
+            with open(writable_cookie, "w", encoding="utf-8") as f:
                 f.write(os.environ["YOUTUBE_COOKIES"])
-            opts["cookiefile"] = temp_cookie
-        except Exception:
-            pass
+            opts["cookiefile"] = writable_cookie
+        except Exception as e:
+            print(f"[Cookies] Gagal tulis YOUTUBE_COOKIES ke /tmp: {e}")
 
     return opts
 
