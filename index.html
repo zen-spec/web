@@ -1,986 +1,194 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaveVid - Download Video TikTok & YouTube Gratis</title>
-  <meta name="description"
-    content="Download video TikTok tanpa watermark dan YouTube MP4/MP3 gratis. Cepat, mudah, dan tanpa daftar.">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --tiktok: #fe2c55;
-      --youtube: #ff0000;
-      --dark: #0f172a;
-      --gray: #64748b;
-      --light: #f8fafc;
-      --white: #ffffff;
-    }
-
-    body {
-      background: #f8fafc;
-      color: var(--dark);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    /* Navbar */
-    nav {
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .nav-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), var(--tiktok));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: var(--dark);
-      font-weight: 500;
-      transition: color 0.3s;
-    }
-
-    .nav-links a:hover {
-      color: var(--primary);
-    }
-
-    /* Hero */
-    .hero {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-      padding: 5rem 2rem;
-      text-align: center;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-      background-size: 50px 50px;
-      animation: float 20s linear infinite;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translate(0, 0);
-      }
-
-      100% {
-        transform: translate(50px, 50px);
-      }
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      margin-bottom: 1rem;
-      font-weight: 800;
-    }
-
-    .hero p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.95;
-    }
-
-    /* Downloader Box */
-    .downloader {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      max-width: 700px;
-      margin: 0 auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    }
-
-    .platform-tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      background: #f1f5f9;
-      padding: 0.5rem;
-      border-radius: 12px;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 0.8rem;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-size: 1rem;
-    }
-
-    .tab.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .tab.tiktok.active {
-      color: var(--tiktok);
-    }
-
-    .tab.youtube.active {
-      color: var(--youtube);
-    }
-
-    .input-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .input-group input {
-      flex: 1;
-      padding: 1rem 1.2rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
-      font-size: 1rem;
-      transition: border 0.3s;
-    }
-
-    .input-group input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .download-btn {
-      padding: 1rem 2rem;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .download-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-    }
-
-    .download-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .options {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .option {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      color: var(--gray);
-    }
-
-    .option input {
-      cursor: pointer;
-    }
-
-    /* Loading */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--primary);
-      font-weight: 500;
-    }
-
-    .loading.active {
-      display: block;
-    }
-
-    .spinner {
-      border: 3px solid #f3f4f6;
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 0.5rem;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Result */
-    .result {
-      display: none;
-      margin-top: 1.5rem;
-      padding: 1.5rem;
-      background: #f0f9ff;
-      border-radius: 12px;
-      border-left: 4px solid var(--primary);
-    }
-
-    .result.active {
-      display: block;
-    }
-
-    .result-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .result-thumb {
-      width: 80px;
-      height: 60px;
-      background: #ddd;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-    }
-
-    .result-info h4 {
-      font-size: 1rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .result-info p {
-      font-size: 0.85rem;
-      color: var(--gray);
-    }
-
-    .download-options {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .download-option {
-      padding: 0.8rem;
-      background: white;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
-      color: var(--dark);
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-
-    .download-option:hover {
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .download-option .format {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--gray);
-      margin-top: 0.25rem;
-    }
-
-    /* Features */
-    .features {
-      padding: 5rem 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .section-title h2 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .section-title p {
-      color: var(--gray);
-      font-size: 1.1rem;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-
-    .feature-card {
-      padding: 2rem;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      transition: transform 0.3s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .feature-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, var(--primary), var(--tiktok));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: white;
-    }
-
-    .feature-card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .feature-card p {
-      color: var(--gray);
-    }
-
-    /* How To */
-    .how-to {
-      background: white;
-      padding: 5rem 2rem;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .step {
-      text-align: center;
-      position: relative;
-    }
-
-    .step-number {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 0 auto 1rem;
-    }
-
-    .step h3 {
-      margin-bottom: 0.5rem;
-    }
-
-    .step p {
-      color: var(--gray);
-    }
-
-    /* FAQ */
-    .faq {
-      padding: 5rem 2rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .faq-item {
-      background: white;
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      overflow: hidden;
-    }
-
-    .faq-question {
-      padding: 1.5rem;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-    }
-
-    .faq-question::after {
-      content: '+';
-      font-size: 1.5rem;
-      transition: transform 0.3s;
-    }
-
-    .faq-item.active .faq-question::after {
-      transform: rotate(45deg);
-    }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s;
-      padding: 0 1.5rem;
-      color: var(--gray);
-    }
-
-    .faq-item.active .faq-answer {
-      max-height: 200px;
-      padding: 0 1.5rem 1.5rem;
-    }
-
-    /* Footer */
-    footer {
-      background: var(--dark);
-      color: white;
-      padding: 3rem 2rem 1.5rem;
-      text-align: center;
-    }
-
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin: 2rem 0;
-      flex-wrap: wrap;
-    }
-
-    .footer-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-
-    .footer-links a:hover {
-      color: white;
-    }
-
-    .copyright {
-      padding-top: 2rem;
-      border-top: 1px solid #334155;
-      color: #94a3b8;
-      font-size: 0.9rem;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--dark);
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      transform: translateY(200%);
-      transition: transform 0.3s;
-      z-index: 2000;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-      }
-
-      .input-group {
-        flex-direction: column;
-      }
-
-      .hero {
-        padding: 3rem 1rem;
-      }
-
-      .downloader {
-        padding: 1.5rem;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Downloader</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex; justify-content: center; align-items: center;
+    padding: 20px;
+  }
+  .container {
+    background: #fff; border-radius: 20px;
+    padding: 40px; max-width: 700px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  h1 { text-align: center; margin-bottom: 10px; color: #333; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 14px; }
+  
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 12px; border: none; cursor: pointer;
+    background: #f0f0f0; border-radius: 10px;
+    font-weight: 600; transition: all 0.3s;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+  }
+
+  .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+  input {
+    flex: 1; padding: 15px; border: 2px solid #e0e0e0;
+    border-radius: 10px; font-size: 15px; outline: none;
+    transition: border 0.3s;
+  }
+  input:focus { border-color: #667eea; }
+  
+  button.submit {
+    padding: 15px 30px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border-radius: 10px; font-weight: 600;
+    transition: transform 0.2s;
+  }
+  button.submit:hover { transform: translateY(-2px); }
+  button.submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .loading { text-align: center; padding: 20px; color: #667eea; }
+  
+  .result {
+    margin-top: 20px; padding: 20px;
+    background: #f9f9f9; border-radius: 15px;
+  }
+  .result img {
+    width: 100%; max-width: 300px; border-radius: 10px;
+    display: block; margin: 0 auto 15px;
+  }
+  .result h3 { color: #333; margin-bottom: 10px; font-size: 16px; }
+  .result p { color: #666; font-size: 14px; margin-bottom: 15px; }
+  
+  .format-list { display: flex; flex-direction: column; gap: 8px; }
+  .format-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; background: white; border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+  .format-item span { font-size: 14px; color: #333; }
+  .format-item a {
+    padding: 8px 16px; background: #667eea; color: white;
+    text-decoration: none; border-radius: 6px; font-size: 13px;
+    transition: background 0.2s;
+  }
+  .format-item a:hover { background: #5568d3; }
+  
+  .error {
+    padding: 15px; background: #fee; color: #c33;
+    border-radius: 10px; margin-top: 15px; font-size: 14px;
+  }
+</style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>🎬 My Downloader</h1>
+    <p class="subtitle">Download video YouTube & TikTok dengan mudah</p>
 
-  <!-- Navbar -->
-  <nav>
-    <div class="nav-container">
-      <div class="logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="url(#grad1)" />
-          <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="url(#grad1)" stroke-width="2" fill="none" />
-          <defs>
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#6366f1" />
-              <stop offset="100%" style="stop-color:#ec4899" />
-            </linearGradient>
-          </defs>
-        </svg>
-        SaveVid
-      </div>
-      <ul class="nav-links">
-        <li><a href="#home">Beranda</a></li>
-        <li><a href="#features">Fitur</a></li>
-        <li><a href="#how-to">Cara Pakai</a></li>
-        <li><a href="#faq">FAQ</a></li>
-      </ul>
+    <div class="tabs">
+      <button class="tab active" data-tab="youtube">▶️ YouTube</button>
+      <button class="tab" data-tab="tiktok">🎵 TikTok</button>
     </div>
-  </nav>
 
-  <!-- Hero -->
-  <section class="hero" id="home">
-    <div class="hero-content">
-      <h1>Download Video TikTok & YouTube Gratis 🎬</h1>
-      <p>Simpan video favorit kamu dengan kualitas terbaik. Tanpa watermark, tanpa daftar, cepat & mudah!</p>
+    <div class="input-group">
+      <input type="text" id="urlInput" placeholder="Paste link di sini...">
+      <button class="submit" id="submitBtn">Download</button>
+    </div>
 
-      <div class="downloader">
-        <div class="platform-tabs">
-          <button class="tab tiktok active" onclick="switchTab('tiktok')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.82a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.25z" />
-            </svg>
-            TikTok
-          </button>
-          <button class="tab youtube" onclick="switchTab('youtube')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-            </svg>
-            YouTube
-          </button>
-        </div>
+    <div id="output"></div>
+  </div>
 
-        <div class="input-group">
-          <input type="text" id="videoUrl" placeholder="Tempel link video di sini..." />
-          <button class="download-btn" onclick="downloadVideo()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Download
-          </button>
-        </div>
+<script>
+  let currentTab = 'youtube';
 
-        <div class="options" id="options" style="display:none">
-          <label class="option">
-            <input type="checkbox" id="noWatermark" checked>
-            Tanpa Watermark
-          </label>
-          <label class="option" id="mp3Option" style="display:none">
-            <input type="checkbox" id="mp3">
-            MP3 Audio
-          </label>
-        </div>
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      document.getElementById('urlInput').placeholder =
+        currentTab === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://tiktok.com/@user/video/...';
+      document.getElementById('output').innerHTML = '';
+    });
+  });
 
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          Memproses video...
-        </div>
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const url = document.getElementById('urlInput').value.trim();
+    const output = document.getElementById('output');
+    const btn = document.getElementById('submitBtn');
 
-        <div class="result" id="result">
-          <div class="result-header">
-            <div class="result-thumb" id="thumb">🎬</div>
-            <div class="result-info">
-              <h4 id="videoTitle">Judul Video</h4>
-              <p id="videoDuration">Durasi: --</p>
+    if (!url) return alert('Masukkan URL dulu!');
+
+    btn.disabled = true;
+    output.innerHTML = '<div class="loading">⏳ Memproses...</div>';
+
+    try {
+      const res = await fetch(`/api/${currentTab}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+      renderResult(data);
+    } catch (err) {
+      output.innerHTML = `<div class="error">❌ ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function renderResult(data) {
+    const output = document.getElementById('output');
+
+    if (currentTab === 'youtube') {
+      let html = `
+        <div class="result">
+          <img src="${data.thumbnail}" alt="thumbnail">
+          <h3>${data.title}</h3>
+          <p>👤 ${data.author} • ⏱️ ${data.duration}s</p>
+          <h3>📹 Video:</h3>
+          <div class="format-list">
+      `;
+      data.videoFormats.forEach(f => {
+        const dlUrl = `/api/download?url=${encodeURIComponent(f.url)}&filename=video_${f.quality}.mp4`;
+        html += `<div class="format-item">
+          <span>${f.quality} (${f.mimeType.split(';')[0]})</span>
+          <a href="${dlUrl}">⬇️ Download</a>
+        </div>`;
+      });
+      html += `</div><h3 style="margin-top:15px">🎵 Audio:</h3><div class="format-list">`;
+      data.audioFormats.forEach(f => {
+        const dlUrl = `/api/download?url=${encodeURIComponent(f.url)}&filename=audio_${f.quality}.m4a`;
+        html += `<div class="format-item">
+          <span>${f.quality}</span>
+          <a href="${dlUrl}">⬇️ Download</a>
+        </div>`;
+      });
+      html += `</div></div>`;
+      output.innerHTML = html;
+    } else {
+      output.innerHTML = `
+        <div class="result">
+          <img src="${data.thumbnail}" alt="thumbnail">
+          <h3>${data.title || 'TikTok Video'}</h3>
+          <p>👤 ${data.author}</p>
+          <div class="format-list">
+            <div class="format-item">
+              <span>💧 With Watermark</span>
+              <a href="/api/download?url=${encodeURIComponent(data.videoUrl)}&filename=tiktok_wm.mp4">⬇️ Download</a>
+            </div>
+            <div class="format-item">
+              <span>✨ No Watermark</span>
+              <a href="/api/download?url=${encodeURIComponent(data.videoUrlNoWatermark)}&filename=tiktok_nowm.mp4">⬇️ Download</a>
             </div>
           </div>
-          <div class="download-options" id="downloadOptions"></div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <section class="features" id="features">
-    <div class="section-title">
-      <h2>Kenapa Pilih SaveVid?</h2>
-      <p>Alat terbaik untuk download video dengan fitur lengkap</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Super Cepat</h3>
-        <p>Download video dalam hitungan detik dengan server berkecepatan tinggi.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎯</div>
-        <h3>Tanpa Watermark</h3>
-        <p>Download TikTok tanpa watermark. Hasil bersih untuk video kamu.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">💎</div>
-        <h3>Kualitas HD</h3>
-        <p>Pilih resolusi mulai dari 360p hingga 4K untuk YouTube.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <h3>100% Aman</h3>
-        <p>Tanpa registrasi, tanpa malware. Privasi kamu terjamin sepenuhnya.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
-        <h3>Mobile Friendly</h3>
-        <p>Bisa diakses dari semua perangkat - HP, tablet, atau komputer.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎵</div>
-        <h3>MP3 Converter</h3>
-        <p>Konversi video YouTube ke MP3 dengan kualitas audio terbaik.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- How To -->
-  <section class="how-to" id="how-to">
-    <div class="section-title">
-      <h2>Cara Download Video</h2>
-      <p>Hanya 3 langkah mudah untuk menyimpan video</p>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <h3>Salin Link Video</h3>
-        <p>Buka aplikasi TikTok atau YouTube, lalu salin link video yang ingin didownload.</p>
-      </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <h3>Tempel Link</h3>
-        <p>Pilih platform (TikTok/YouTube) dan tempel link di kolom input.</p>
-      </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <h3>Klik Download</h3>
-        <p>Tunggu proses selesai dan pilih format file yang diinginkan.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="faq" id="faq">
-    <div class="section-title">
-      <h2>Pertanyaan Umum</h2>
-      <p>Jawaban untuk pertanyaan yang sering ditanyakan</p>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-question">Apakah SaveVid gratis?</div>
-      <div class="faq-answer">Ya, SaveVid 100% gratis untuk digunakan tanpa batasan jumlah download.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-question">Bagaimana cara download TikTok tanpa watermark?</div>
-      <div class="faq-answer">Pilih tab TikTok, tempel link video, centang "Tanpa Watermark", lalu klik Download. Video
-        akan tersimpan tanpa watermark TikTok.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-question">Apakah aman untuk digunakan?</div>
-      <div class="faq-answer">Sangat aman! Kami tidak menyimpan data pengguna dan tidak ada virus atau malware. Proses
-        download berjalan di browser kamu.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-question">Apakah bisa download YouTube MP3?</div>
-      <div class="faq-answer">Tentu saja! Pilih tab YouTube, centang opsi MP3, dan kamu bisa mendapatkan audio dari
-        video YouTube dengan kualitas terbaik.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-question">Platform apa saja yang didukung?</div>
-      <div class="faq-answer">Saat ini kami mendukung TikTok dan YouTube. Platform lainnya akan segera ditambahkan.
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer>
-    <div class="footer-content">
-      <div class="logo" style="justify-content:center; margin-bottom:1rem;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" />
-          <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2" fill="none" />
-        </svg>
-        SaveVid
-      </div>
-      <p style="color:#cbd5e1;">Alat download video terbaik untuk TikTok dan YouTube</p>
-      <div class="footer-links">
-        <a href="#home">Beranda</a>
-        <a href="#features">Fitur</a>
-        <a href="#how-to">Cara Pakai</a>
-        <a href="#faq">FAQ</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms</a>
-      </div>
-      <div class="copyright">
-        © 2026 SaveVid. All rights reserved. Made with ❤️
-      </div>
-    </div>
-  </footer>
-
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-  <script>
-    let currentPlatform = 'tiktok';
-
-    function switchTab(platform) {
-      currentPlatform = platform;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.tab.${platform}`).classList.add('active');
-
-      const mp3Option = document.getElementById('mp3Option');
-      const input = document.getElementById('videoUrl');
-
-      if (platform === 'youtube') {
-        mp3Option.style.display = 'flex';
-        input.placeholder = 'Tempel link YouTube di sini (contoh: https://youtube.com/watch?v=...)';
-      } else {
-        mp3Option.style.display = 'none';
-        input.placeholder = 'Tempel link TikTok di sini (contoh: https://www.tiktok.com/@user/video/...)';
-        document.getElementById('mp3').checked = false;
-      }
-
-      document.getElementById('options').style.display = 'flex';
-      document.getElementById('result').classList.remove('active');
+      `;
     }
-
-    function showToast(message, type = 'info') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    function validateUrl(url) {
-      if (currentPlatform === 'tiktok') {
-        return /tiktok\.com/i.test(url) || /vm\.tiktok\.com/i.test(url);
-      } else {
-        return /youtube\.com|youtu\.be/i.test(url);
-      }
-    }
-
-    async function downloadVideo() {
-        const url = document.getElementById('videoUrl').value.trim();
-        
-        if (!url) {
-            showToast('❌ Masukkan link video!');
-            return;
-        }
-        
-        const loading = document.getElementById('loading');
-        loading.classList.add('active');
-        
-        try {
-            // 1. Ambil info video dulu
-            const infoRes = await fetch('http://localhost:5000/api/info', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: url})
-            });
-            
-            const info = await infoRes.json();
-            
-            if (info.status === 'success') {
-                showResult(info);
-            } else {
-                showToast('❌ ' + info.error);
-            }
-        } catch (error) {
-            showToast('❌ Error: ' + error.message);
-        } finally {
-            loading.classList.remove('active');
-        }
-    }
-
-    function showResult(url) {
-      const result = document.getElementById('result');
-      const thumb = document.getElementById('thumb');
-      const title = document.getElementById('videoTitle');
-      const duration = document.getElementById('videoDuration');
-      const options = document.getElementById('downloadOptions');
-
-      if (currentPlatform === 'tiktok') {
-        thumb.textContent = '🎵';
-        thumb.style.background = 'linear-gradient(135deg, #fe2c55, #25f4ee)';
-        title.textContent = 'Video TikTok';
-        duration.textContent = 'Durasi: 30 detik';
-
-        options.innerHTML = `
-                    <div class="download-option" onclick="simulateDownload('mp4-nowm')">
-                        📹 MP4 No Watermark
-                        <span class="format">HD • Video</span>
-                    </div>
-                    <div class="download-option" onclick="simulateDownload('mp4-wm')">
-                        📹 MP4 Watermark
-                        <span class="format">HD • Video</span>
-                    </div>
-                    <div class="download-option" onclick="simulateDownload('mp3')">
-                        🎵 MP3 Audio
-                        <span class="format">128kbps • Audio</span>
-                    </div>
-                `;
-      } else {
-        thumb.textContent = '▶️';
-        thumb.style.background = 'linear-gradient(135deg, #ff0000, #cc0000)';
-        title.textContent = 'Video YouTube';
-        duration.textContent = 'Durasi: 10:30';
-
-        const isMp3 = document.getElementById('mp3').checked;
-
-        if (isMp3) {
-          options.innerHTML = `
-                        <div class="download-option" onclick="simulateDownload('mp3-128')">
-                            🎵 MP3 128kbps
-                            <span class="format">Audio</span>
-                        </div>
-                        <div class="download-option" onclick="simulateDownload('mp3-320')">
-                            🎵 MP3 320kbps
-                            <span class="format">Audio • HD</span>
-                        </div>
-                    `;
-        } else {
-          options.innerHTML = `
-                        <div class="download-option" onclick="simulateDownload('360p')">
-                            📹 360p
-                            <span class="format">MP4 • SD</span>
-                        </div>
-                        <div class="download-option" onclick="simulateDownload('720p')">
-                            📹 720p
-                            <span class="format">MP4 • HD</span>
-                        </div>
-                        <div class="download-option" onclick="simulateDownload('1080p')">
-                            📹 1080p
-                            <span class="format">MP4 • Full HD</span>
-                        </div>
-                        <div class="download-option" onclick="simulateDownload('4k')">
-                            📹 4K
-                            <span class="format">MP4 • Ultra HD</span>
-                        </div>
-                    `;
-        }
-      }
-
-      result.classList.add('active');
-      showToast('✅ Video berhasil diproses!');
-    }
-
-    function simulateDownload(format) {
-      showToast(`⏬ Memulai download ${format}...`);
-      setTimeout(() => {
-        showToast('💡 Ini adalah demo. Integrasikan dengan API untuk download asli.');
-      }, 1500);
-    }
-
-    // FAQ Accordion
-    document.querySelectorAll('.faq-question').forEach(question => {
-      question.addEventListener('click', () => {
-        const item = question.parentElement;
-        const isActive = item.classList.contains('active');
-        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-        if (!isActive) item.classList.add('active');
-      });
-    });
-
-    // Paste listener
-    document.getElementById('videoUrl').addEventListener('paste', (e) => {
-      setTimeout(() => {
-        const url = e.target.value;
-        if (url.includes('tiktok')) switchTab('tiktok');
-        else if (url.includes('youtube') || url.includes('youtu.be')) switchTab('youtube');
-      }, 100);
-    });
-
-    // Enter key
-    document.getElementById('videoUrl').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') downloadVideo();
-    });
-  </script>
+  }
+</script>
 </body>
-
 </html>
