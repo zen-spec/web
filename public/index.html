@@ -14,77 +14,78 @@
   }
   .container {
     background: #fff; border-radius: 20px;
-    padding: 40px; max-width: 700px; width: 100%;
+    padding: 30px; max-width: 650px; width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
-  h1 { text-align: center; margin-bottom: 10px; color: #333; }
-  .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 14px; }
-  
+  h1 { text-align: center; margin-bottom: 8px; color: #333; font-size: 26px; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 25px; font-size: 13px; }
+
   .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
   .tab {
     flex: 1; padding: 12px; border: none; cursor: pointer;
     background: #f0f0f0; border-radius: 10px;
-    font-weight: 600; transition: all 0.3s;
+    font-weight: 600; font-size: 15px; transition: all 0.3s;
   }
   .tab.active {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
   }
 
-  .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+  .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
   input {
-    flex: 1; padding: 15px; border: 2px solid #e0e0e0;
-    border-radius: 10px; font-size: 15px; outline: none;
+    flex: 1; padding: 14px; border: 2px solid #e0e0e0;
+    border-radius: 10px; font-size: 14px; outline: none;
     transition: border 0.3s;
   }
   input:focus { border-color: #667eea; }
-  
+
   button.submit {
-    padding: 15px 30px; border: none; cursor: pointer;
+    padding: 14px 24px; border: none; cursor: pointer;
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white; border-radius: 10px; font-weight: 600;
-    transition: transform 0.2s;
+    transition: transform 0.2s; font-size: 14px;
   }
-  button.submit:hover { transform: translateY(-2px); }
+  button.submit:hover:not(:disabled) { transform: translateY(-2px); }
   button.submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .loading { text-align: center; padding: 20px; color: #667eea; }
-  
+  .loading { text-align: center; padding: 20px; color: #667eea; font-weight: 600; }
+
   .result {
     margin-top: 20px; padding: 20px;
     background: #f9f9f9; border-radius: 15px;
   }
   .result img {
-    width: 100%; max-width: 300px; border-radius: 10px;
+    width: 100%; max-width: 280px; border-radius: 10px;
     display: block; margin: 0 auto 15px;
   }
-  .result h3 { color: #333; margin-bottom: 10px; font-size: 16px; }
-  .result p { color: #666; font-size: 14px; margin-bottom: 15px; }
-  
-  .format-list { display: flex; flex-direction: column; gap: 8px; }
+  .result h3 { color: #333; margin-bottom: 8px; font-size: 15px; }
+  .result p { color: #666; font-size: 13px; margin-bottom: 12px; }
+
+  .format-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .format-item {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 12px; background: white; border-radius: 8px;
+    padding: 10px 14px; background: white; border-radius: 8px;
     border: 1px solid #e0e0e0;
   }
-  .format-item span { font-size: 14px; color: #333; }
+  .format-item span { font-size: 13px; color: #333; font-weight: 500; }
   .format-item a {
-    padding: 8px 16px; background: #667eea; color: white;
-    text-decoration: none; border-radius: 6px; font-size: 13px;
-    transition: background 0.2s;
+    padding: 8px 14px; background: #667eea; color: white;
+    text-decoration: none; border-radius: 6px; font-size: 12px;
+    transition: background 0.2s; font-weight: 600;
   }
   .format-item a:hover { background: #5568d3; }
-  
+
   .error {
-    padding: 15px; background: #fee; color: #c33;
-    border-radius: 10px; margin-top: 15px; font-size: 14px;
+    padding: 14px; background: #fee; color: #c33;
+    border-radius: 10px; margin-top: 15px; font-size: 13px;
   }
+  .section-title { color: #444; font-size: 14px; font-weight: 700; margin-top: 15px; }
 </style>
 </head>
 <body>
   <div class="container">
     <h1>🎬 My Downloader</h1>
-    <p class="subtitle">Download video YouTube & TikTok dengan mudah</p>
+    <p class="subtitle">Download video YouTube & TikTok</p>
 
     <div class="tabs">
       <button class="tab active" data-tab="youtube">▶️ YouTube</button>
@@ -92,7 +93,7 @@
     </div>
 
     <div class="input-group">
-      <input type="text" id="urlInput" placeholder="Paste link di sini...">
+      <input type="text" id="urlInput" placeholder="Paste link YouTube di sini...">
       <button class="submit" id="submitBtn">Download</button>
     </div>
 
@@ -108,12 +109,19 @@
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
       document.getElementById('urlInput').placeholder =
-        currentTab === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://tiktok.com/@user/video/...';
+        currentTab === 'youtube'
+          ? 'Paste link YouTube di sini...'
+          : 'Paste link TikTok di sini...';
       document.getElementById('output').innerHTML = '';
     });
   });
 
-  document.getElementById('submitBtn').addEventListener('click', async () => {
+  document.getElementById('submitBtn').addEventListener('click', process);
+  document.getElementById('urlInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') process();
+  });
+
+  async function process() {
     const url = document.getElementById('urlInput').value.trim();
     const output = document.getElementById('output');
     const btn = document.getElementById('submitBtn');
@@ -121,7 +129,7 @@
     if (!url) return alert('Masukkan URL dulu!');
 
     btn.disabled = true;
-    output.innerHTML = '<div class="loading">⏳ Memproses...</div>';
+    output.innerHTML = '<div class="loading">⏳ Memproses video...</div>';
 
     try {
       const res = await fetch(`/api/${currentTab}`, {
@@ -131,14 +139,14 @@
       });
       const data = await res.json();
 
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || 'Gagal memproses');
       renderResult(data);
     } catch (err) {
       output.innerHTML = `<div class="error">❌ ${err.message}</div>`;
     } finally {
       btn.disabled = false;
     }
-  });
+  }
 
   function renderResult(data) {
     const output = document.getElementById('output');
@@ -146,44 +154,47 @@
     if (currentTab === 'youtube') {
       let html = `
         <div class="result">
-          <img src="${data.thumbnail}" alt="thumbnail">
+          <img src="${data.thumbnail}" alt="thumbnail" onerror="this.style.display='none'">
           <h3>${data.title}</h3>
-          <p>👤 ${data.author} • ⏱️ ${data.duration}s</p>
-          <h3>📹 Video:</h3>
+          <p>👤 ${data.author} • ⏱️ ${data.duration} detik</p>
+          <div class="section-title">📹 Video + Audio:</div>
           <div class="format-list">
       `;
       data.videoFormats.forEach(f => {
-        const dlUrl = `/api/download?url=${encodeURIComponent(f.url)}&filename=video_${f.quality}.mp4`;
+        const dl = `/api/download?url=${encodeURIComponent(f.url)}&filename=video_${f.quality}.mp4`;
         html += `<div class="format-item">
-          <span>${f.quality} (${f.mimeType.split(';')[0]})</span>
-          <a href="${dlUrl}">⬇️ Download</a>
+          <span>🎥 ${f.quality}</span>
+          <a href="${dl}">⬇️ Download</a>
         </div>`;
       });
-      html += `</div><h3 style="margin-top:15px">🎵 Audio:</h3><div class="format-list">`;
+      html += `</div><div class="section-title">🎵 Audio Only:</div><div class="format-list">`;
       data.audioFormats.forEach(f => {
-        const dlUrl = `/api/download?url=${encodeURIComponent(f.url)}&filename=audio_${f.quality}.m4a`;
+        const dl = `/api/download?url=${encodeURIComponent(f.url)}&filename=audio_${f.quality}.m4a`;
         html += `<div class="format-item">
-          <span>${f.quality}</span>
-          <a href="${dlUrl}">⬇️ Download</a>
+          <span>🎧 ${f.quality}</span>
+          <a href="${dl}">⬇️ Download</a>
         </div>`;
       });
       html += `</div></div>`;
       output.innerHTML = html;
+
     } else {
+      const noWm = data.videoUrlNoWatermark || data.videoUrl;
+      const wm = data.videoUrl;
       output.innerHTML = `
         <div class="result">
-          <img src="${data.thumbnail}" alt="thumbnail">
-          <h3>${data.title || 'TikTok Video'}</h3>
+          <img src="${data.thumbnail}" alt="thumbnail" onerror="this.style.display='none'">
+          <h3>${data.title}</h3>
           <p>👤 ${data.author}</p>
           <div class="format-list">
-            <div class="format-item">
-              <span>💧 With Watermark</span>
-              <a href="/api/download?url=${encodeURIComponent(data.videoUrl)}&filename=tiktok_wm.mp4">⬇️ Download</a>
-            </div>
-            <div class="format-item">
+            ${noWm ? `<div class="format-item">
               <span>✨ No Watermark</span>
-              <a href="/api/download?url=${encodeURIComponent(data.videoUrlNoWatermark)}&filename=tiktok_nowm.mp4">⬇️ Download</a>
-            </div>
+              <a href="/api/download?url=${encodeURIComponent(noWm)}&filename=tiktok_nowm.mp4">⬇️ Download</a>
+            </div>` : ''}
+            ${wm ? `<div class="format-item">
+              <span>💧 With Watermark</span>
+              <a href="/api/download?url=${encodeURIComponent(wm)}&filename=tiktok_wm.mp4">⬇️ Download</a>
+            </div>` : ''}
           </div>
         </div>
       `;
