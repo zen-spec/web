@@ -5,25 +5,17 @@ const yt = require('@vreden/youtube_scraper');
 
 const app = express();
 
-// Konfigurasi CORS agar frontend dapat mengakses API
-app.use(
-  cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
-  })
-);
-
+app.use(cors());
 app.use(express.json());
 
-// Helper: Deteksi Platform
+// Helper Deteksi URL
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
   return null;
 }
 
-// Handler YouTube
+// YouTube Scraper Handler
 async function handleYouTube(url, res) {
   try {
     const [meta, mp4Data, mp3Data] = await Promise.allSettled([
@@ -73,7 +65,7 @@ async function handleYouTube(url, res) {
   }
 }
 
-// Handler TikTok
+// TikTok Scraper Handler
 async function handleTikTok(url, res) {
   try {
     const result = await Tiktok.Downloader(url, { version: 'v1' });
@@ -125,7 +117,7 @@ async function handleTikTok(url, res) {
   }
 }
 
-// Endpoint Utama Fetch
+// API Endpoint
 app.post('/api/fetch', async (req, res) => {
   const { url } = req.body || {};
   if (!url) {
@@ -146,10 +138,4 @@ app.post('/api/fetch', async (req, res) => {
   }
 });
 
-// Root & Health check
-app.get('*', (req, res) => {
-  res.json({ status: 'online', message: 'Saweria Downloader Vercel Backend Ready' });
-});
-
-// Export untuk Vercel Serverless Function
 module.exports = app;
