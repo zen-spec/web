@@ -67,6 +67,77 @@ def format_duration(seconds: int) -> str:
         return f"{h}:{m:02d}:{s:02d}"
     return f"{m}:{s:02d}"
 
+def build_ydl_opts(platform: str, format_str: str = None) -> dict:
+    """Konfigurasi yt-dlp dengan bypass bot/login YouTube untuk cloud server (Render/Railway)"""
+    opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "noplaylist": True,
+        "skip_download": True,
+        "socket_timeout": 20,
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+        }
+    }
+
+    if platform == "youtube":
+        # Gunakan beberapa client (android, ios, tv, web) agar tidak mudah kena
+        # blokir bot/login di IP Datacenter (Railway/Render). yt-dlp akan mencoba
+        # client satu per satu sampai salah satu berhasil.
+        opts["extractor_args"] = {
+            "youtube": {
+                "player_client": ["android", "ios", "tv", "web"],
+                "player_skip": ["webpage"],
+            }
+        }
+    elif platform == "tiktok":
+        opts["format"] = "download_addr-0/best"
+
+    if format_str:
+        opts["format"] = format_str
+
+    # Dukungan cookies jika user menyediakan cookies.txt atau environment variable
+    cookie_path = os.path.join(os.path.dirname(__file__), "cookies.txt")
+    if os.path.exists(cookie_path):
+        opts["cookiefile"] = cookie_path
+    elif os.environ.get("YOUTUBE_COOKIES"):
+        temp_cookie = os.path.join(os.path.dirname(__file__), "temp_cookies.txt")
+        try:
+            with open(temp_cookie, "w", encoding="utf-8") as f:
+                f.write(os.environ["YOUTUBE_COOKIES"])
+            opts["cookiefile"] = temp_cookie
+        except Exception:
+            pass
+
+    return opts
+
+def explain_download_error(e: Exception) -> str:
+    """Ubah error mentah yt-dlp jadi pesan yang jelas & actionable untuk user."""
+    error_msg = str(e)
+
+    if "Private video" in error_msg:
+        return "Video bersifat private dan tidak dapat diakses."
+    if "Video unavailable" in error_msg:
+        return "Video tidak tersedia atau telah dihapus."
+    if "This video is not available" in error_msg or "geo" in error_msg.lower():
+        return "Video tidak tersedia di lokasi server (kemungkinan dibatasi wilayah/geo-blocked)."
+    if "Sign in to confirm" in error_msg or "confirm you're not a bot" in error_msg or "Sign in" in error_msg:
+        # Ini BUKAN soal video tertentu — YouTube mendeteksi IP server cloud
+        # (Railway/Render dsb) sebagai bot dan meminta verifikasi login.
+        # Satu-satunya perbaikan yang stabil adalah menyuplai cookies dari
+        # akun YouTube yang sudah login (lihat README bagian "Mengatasi
+        # error verifikasi login/bot").
+        return (
+            "YouTube meminta verifikasi login karena IP server ini terdeteksi sebagai bot "
+            "(masalah umum di hosting cloud seperti Railway/Render, bukan soal video/link "
+            "yang salah). Perbaikan: tambahkan cookies akun YouTube ke backend "
+            "(file cookies.txt atau env var YOUTUBE_COOKIES) — lihat README."
+        )
+    if "Unable to extract" in error_msg or "unable to download" in error_msg.lower():
+        return "YouTube mengubah struktur halaman mereka. Update yt-dlp ke versi terbaru (pip install -U yt-dlp)."
+    return f"Gagal memproses video: {error_msg[:200]}"
+
 def get_youtube_formats(info: dict) -> list:
     """Ekstrak format YouTube yang tersedia"""
     formats_raw = info.get("formats", [])
@@ -82,14 +153,8 @@ def get_youtube_formats(info: dict) -> list:
         {"label": "144p", "height": 144, "ext": "mp4"},
     ]
 
-    available_heights = set()
-    for f in formats_raw:
-        if f.get("height"):
-            available_heights.add(f.get("height"))
-
     for preset in quality_presets:
         h = preset["height"]
-        # Cari format mendekati height ini
         best_match = None
         for f in formats_raw:
             fh = f.get("height") or 0
@@ -114,10 +179,10 @@ def get_youtube_formats(info: dict) -> list:
         "ext": "mp3",
     })
 
-    # Fallback jika tidak ada format spesifik
+    # Fallback jika format spesifik tidak ditemukan
     if len(result) <= 1:
         result = [
-            {"format_id": "best[ext=mp4]/best", "label": "Kualitas Terbaik", "ext": "mp4"},
+            {"format_id": "best[ext=mp4]/best", "label": "Kualitas Terbaik (MP4)", "ext": "mp4"},
             {"format_id": "bestaudio/best", "label": "🎵 MP3 Audio", "ext": "mp3"},
         ]
 
@@ -148,16 +213,7 @@ async def get_video_info(req: VideoInfoRequest):
             detail=f"URL tidak valid untuk platform {platform}."
         )
 
-    ydl_opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
-        "skip_download": True,
-    }
-
-    # TikTok: gunakan format tanpa watermark
-    if platform == "tiktok":
-        ydl_opts["format"] = "download_addr-0"
+    ydl_opts = build_ydl_opts(platform)
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -180,7 +236,6 @@ async def get_video_info(req: VideoInfoRequest):
             if platform == "youtube":
                 response_data["formats"] = get_youtube_formats(info)
             else:
-                # TikTok — langsung format terbaik
                 response_data["formats"] = [
                     {"format_id": "best", "label": "HD (Tanpa Watermark)", "ext": "mp4"}
                 ]
@@ -188,16 +243,9 @@ async def get_video_info(req: VideoInfoRequest):
             return response_data
 
     except yt_dlp.utils.DownloadError as e:
-        error_msg = str(e)
-        if "Private video" in error_msg:
-            detail = "Video bersifat private dan tidak dapat diakses."
-        elif "Video unavailable" in error_msg:
-            detail = "Video tidak tersedia atau telah dihapus."
-        elif "Sign in" in error_msg:
-            detail = "Video memerlukan login. Coba link lain."
-        else:
-            detail = f"Gagal mengambil info video: {error_msg[:200]}"
-        raise HTTPException(status_code=422, detail=detail)
+        raise HTTPException(status_code=422, detail=explain_download_error(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)[:200]}")
 
@@ -213,28 +261,16 @@ async def get_download_url(req: DownloadUrlRequest):
     if not is_valid_url(url, platform):
         raise HTTPException(status_code=400, detail="URL tidak valid.")
 
-    # Pilih format berdasarkan platform dan format_id
     if platform == "tiktok":
-        fmt = "best"
+        fmt = "download_addr-0/best"
     elif format_id == "bestaudio/best":
         fmt = "bestaudio/best"
     elif format_id in ["best", "best[ext=mp4]/best"]:
         fmt = "best[ext=mp4]/best"
     else:
-        # Merge video + audio jika perlu
-        fmt = f"{format_id}+bestaudio[ext=m4a]/bestaudio/{format_id}/best[ext=mp4]/best"
+        fmt = f"{format_id}[ext=mp4]/best[vcodec!=none][acodec!=none]/best[ext=mp4]/best"
 
-    ydl_opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
-        "skip_download": True,
-        "format": fmt,
-    }
-
-    # TikTok khusus: coba tanpa watermark
-    if platform == "tiktok":
-        ydl_opts["format"] = "download_addr-0/best"
+    ydl_opts = build_ydl_opts(platform, format_str=fmt)
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -243,29 +279,32 @@ async def get_download_url(req: DownloadUrlRequest):
             if not info:
                 raise HTTPException(status_code=404, detail="Video tidak ditemukan.")
 
-            # Dapatkan URL download langsung
             download_url = None
 
             if "url" in info:
                 download_url = info["url"]
             elif "requested_formats" in info:
-                # Untuk video+audio merged, ambil format video utama
-                # (browser akan menggunakan URL langsung)
                 fmts = info["requested_formats"]
                 download_url = fmts[0].get("url") if fmts else None
             elif "formats" in info:
-                # Pilih format terbaik
+                # Prioritaskan format yang memiliki audio dan video sekaligus
                 chosen = next(
                     (f for f in reversed(info["formats"])
-                     if f.get("url") and f.get("ext") in ["mp4", "webm", "m4a", "mp3"]),
+                     if f.get("url") and f.get("vcodec") != "none" and f.get("acodec") != "none"),
                     None
                 )
+                if not chosen:
+                    chosen = next(
+                        (f for f in reversed(info["formats"])
+                         if f.get("url") and f.get("ext") in ["mp4", "webm", "m4a", "mp3"]),
+                        None
+                    )
                 download_url = chosen["url"] if chosen else None
 
             if not download_url:
                 raise HTTPException(
                     status_code=422,
-                    detail="Tidak dapat mendapatkan URL download. Coba format lain."
+                    detail="Tidak dapat mendapatkan URL download langsung. Coba format lain."
                 )
 
             ext = "mp4"
@@ -282,14 +321,7 @@ async def get_download_url(req: DownloadUrlRequest):
             }
 
     except yt_dlp.utils.DownloadError as e:
-        error_msg = str(e)
-        if "Private video" in error_msg:
-            detail = "Video bersifat private."
-        elif "Video unavailable" in error_msg:
-            detail = "Video tidak tersedia."
-        else:
-            detail = f"Gagal memproses: {error_msg[:200]}"
-        raise HTTPException(status_code=422, detail=detail)
+        raise HTTPException(status_code=422, detail=explain_download_error(e))
     except HTTPException:
         raise
     except Exception as e:
