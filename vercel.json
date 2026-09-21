@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://nano-1.nura.host:5119/api/:path*"
+      "destination": "http://port:4914/api/:path*"
     }
   ]
 }
