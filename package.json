@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@maxinminax/tiktok-api-dl": "latest",
-    "@vreden/youtube_scraper": "latest",
+    "@vreden/youtube_scraper": "^1.2.9",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   }
