@@ -10,7 +10,7 @@ app.use(express.json());
 // Serve folder public (untuk mode Localhost)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Helper: Deteksi Platform & Ekstrak ID
+// Helper: Deteksi Platform & ID Video
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
@@ -23,57 +23,155 @@ function extractYTId(url) {
 }
 
 // ============================================================
-// 📥 ENDPOINT PROXY DOWNLOAD (Direct File Downloader)
+// 1. YOUTUBE NATIVE SELF-SCRAPER (InnerTube API Engine)
 // ============================================================
-app.get('/api/download', async (req, res) => {
-  try {
-    const { url, filename } = req.query;
-    if (!url) return res.status(400).send('URL media tidak ditemukan');
-
-    // Jika URL external helper, langsung redirect
-    if (url.includes('y2mate') || url.includes('ssyoutube') || url.includes('cobalt.tools')) {
-      return res.redirect(url);
+async function scrapeYouTubeInnerTube(videoId) {
+  const clients = [
+    {
+      clientName: 'ANDROID',
+      clientVersion: '19.02.39',
+      androidSdkVersion: 31
+    },
+    {
+      clientName: 'IOS',
+      clientVersion: '19.02.1',
+      deviceModel: 'iPhone14,3',
+      osName: 'iPhone',
+      osVersion: '17.2.0'
     }
+  ];
 
-    const cleanFilename = (filename || 'saweria_download').replace(/[^a-zA-Z0-9._-]/g, '_');
+  for (const clientConfig of clients) {
+    try {
+      const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'com.google.android.youtube/19.02.39 (Linux; U; Android 12)'
+        },
+        body: JSON.stringify({
+          videoId: videoId,
+          context: {
+            client: {
+              ...clientConfig,
+              hl: 'id',
+              gl: 'ID'
+            }
+          }
+        })
+      });
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      },
-      signal: AbortSignal.timeout(10000)
-    });
+      if (!res.ok) continue;
 
-    if (!response.ok) {
-      return res.redirect(url);
+      const data = await res.json();
+      const videoDetails = data.videoDetails || {};
+      const streamingData = data.streamingData || {};
+
+      const allFormats = [
+        ...(streamingData.formats || []),
+        ...(streamingData.adaptiveFormats || [])
+      ];
+
+      // Ambil format yang memiliki URL langsung (tanpa signature cipher)
+      const directFormats = allFormats.filter(f => f.url);
+
+      if (directFormats.length > 0) {
+        return {
+          title: videoDetails.title || `YouTube Video (${videoId})`,
+          author: videoDetails.author || 'YouTube Channel',
+          duration: videoDetails.lengthSeconds 
+            ? `${Math.floor(videoDetails.lengthSeconds / 60)}m ${videoDetails.lengthSeconds % 60}s` 
+            : 'HD',
+          thumbnail: videoDetails.thumbnail?.thumbnails?.slice(-1)[0]?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+          formats: directFormats
+        };
+      }
+    } catch (e) {
+      console.error(`InnerTube ${clientConfig.clientName} Error:`, e.message);
     }
-
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-
-    res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
-    res.setHeader('Content-Type', contentType);
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return res.send(buffer);
-
-  } catch (err) {
-    console.error('Download Proxy Error:', err);
-    if (req.query.url) return res.redirect(req.query.url);
-    return res.status(500).send('Terjadi kesalahan saat mengunduh file.');
   }
-});
 
-// ------------------------------------------
-// 1. TIKTOK HANDLER (TikWM Engine)
-// ------------------------------------------
+  return null;
+}
+
+async function handleYouTube(url, res) {
+  const videoId = extractYTId(url);
+  if (!videoId) {
+    return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
+  }
+
+  const scraped = await scrapeYouTubeInnerTube(videoId);
+
+  if (!scraped) {
+    return res.status(500).json({
+      status: false,
+      message: 'Gagal mengekstrak video YouTube. Silakan coba link lain atau beberapa saat lagi.'
+    });
+  }
+
+  const downloads = [];
+
+  // Filter Format Video (MP4 Muxed / Direct Stream)
+  const videoStreams = scraped.formats.filter(f => f.mimeType && f.mimeType.includes('video/mp4'));
+  const addedQualities = new Set();
+
+  videoStreams.forEach(f => {
+    const quality = f.qualityLabel || '720p';
+    if (!addedQualities.has(quality)) {
+      addedQualities.add(quality);
+      downloads.push({
+        type: 'video',
+        quality: `${quality} MP4`,
+        url: f.url
+      });
+    }
+  });
+
+  // Jika tidak ada MP4 Muxed, ambil video stream terbaik yang ada
+  if (downloads.length === 0) {
+    const fallbackVideo = scraped.formats.find(f => f.mimeType && f.mimeType.includes('video'));
+    if (fallbackVideo) {
+      downloads.push({
+        type: 'video',
+        quality: `${fallbackVideo.qualityLabel || '720p'} MP4`,
+        url: fallbackVideo.url
+      });
+    }
+  }
+
+  // Filter Format Audio Only (MP3/M4A)
+  const audioStreams = scraped.formats.filter(f => f.mimeType && f.mimeType.includes('audio'));
+  const bestAudio = audioStreams.find(f => f.mimeType.includes('audio/mp4')) || audioStreams[0];
+
+  if (bestAudio) {
+    downloads.push({
+      type: 'audio',
+      quality: 'Audio Original (M4A/MP3)',
+      url: bestAudio.url
+    });
+  }
+
+  return res.json({
+    status: true,
+    platform: 'youtube',
+    title: scraped.title,
+    author: scraped.author,
+    duration: scraped.duration,
+    thumbnail: scraped.thumbnail,
+    downloads
+  });
+}
+
+// ============================================================
+// 2. TIKTOK SELF-SCRAPER
+// ============================================================
 async function handleTikTok(url, res) {
   try {
     const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const json = await response.json();
 
     if (!json || json.code !== 0) {
-      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan video publik.' });
+      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok.' });
     }
 
     const data = json.data;
@@ -97,177 +195,53 @@ async function handleTikTok(url, res) {
   }
 }
 
-// ------------------------------------------
-// 2. YOUTUBE HANDLER (Multi-Engine Anti-Fail)
-// ------------------------------------------
-async function handleYouTube(url, res) {
-  const videoId = extractYTId(url);
-  if (!videoId) {
-    return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
-  }
-
-  const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
-  const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-  // 1. Ambil Metadata via Official YouTube oEmbed (100% Bebas Blokir IP Vercel)
-  let title = `YouTube Video (${videoId})`;
-  let author = 'YouTube Content Creator';
-
+// ============================================================
+// 3. INTERNAL PROXY DOWNLOADER (Paksa Langsung Unduh File)
+// ============================================================
+app.get('/api/download', async (req, res) => {
   try {
-    const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(cleanUrl)}&format=json`);
-    if (oembedRes.ok) {
-      const oembedData = await oembedRes.json();
-      if (oembedData.title) title = oembedData.title;
-      if (oembedData.author_name) author = oembedData.author_name;
-    }
-  } catch (e) {}
+    const { url, filename } = req.query;
+    if (!url) return res.status(400).send('URL media tidak ditemukan');
 
-  const downloads = [];
+    const cleanFilename = (filename || 'saweria_download').replace(/[^a-zA-Z0-9._-]/g, '_');
 
-  // 2. Engine 1: Cobalt API
-  try {
-    const cobaltRes = await fetch('https://api.cobalt.tools/api/json', {
-      method: 'POST',
+    const response = await fetch(url, {
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      },
-      body: JSON.stringify({
-        url: cleanUrl,
-        videoQuality: '720',
-        filenamePattern: 'basic'
-      })
+      }
     });
 
-    if (cobaltRes.ok) {
-      const cobaltData = await cobaltRes.json();
-      if (cobaltData && cobaltData.url) {
-        downloads.push({
-          type: 'video',
-          quality: '720p HD MP4',
-          url: cobaltData.url
-        });
-      }
+    if (!response.ok) {
+      return res.redirect(url);
     }
-  } catch (err) {}
 
-  // 3. Engine 2: Piped API Instances (jika Cobalt gagal/empty)
-  if (downloads.length === 0) {
-    const pipedInstances = [
-      `https://pipedapi.kavin.rocks/streams/${videoId}`,
-      `https://api.piped.yt/streams/${videoId}`,
-      `https://pipedapi.tokhmi.xyz/streams/${videoId}`
-    ];
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
 
-    for (const endpoint of pipedInstances) {
-      try {
-        const pipedRes = await fetch(endpoint, { signal: AbortSignal.timeout(3000) });
-        if (pipedRes.ok) {
-          const pipedData = await pipedRes.json();
-          if (pipedData && pipedData.videoStreams) {
-            const mp4Streams = pipedData.videoStreams.filter(s => s.mimeType && s.mimeType.includes('video/mp4'));
-            const bestStream = mp4Streams.find(s => s.quality === '720p') || mp4Streams[0] || pipedData.videoStreams[0];
-            
-            if (bestStream && bestStream.url) {
-              downloads.push({
-                type: 'video',
-                quality: `${bestStream.quality || '720p'} MP4`,
-                url: bestStream.url
-              });
-            }
+    res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
+    res.setHeader('Content-Type', contentType);
 
-            if (pipedData.audioStreams && pipedData.audioStreams.length > 0) {
-              const bestAudio = pipedData.audioStreams.find(a => a.mimeType && a.mimeType.includes('audio/mp4')) || pipedData.audioStreams[0];
-              if (bestAudio && bestAudio.url) {
-                downloads.push({
-                  type: 'audio',
-                  quality: 'Audio MP3/M4A',
-                  url: bestAudio.url
-                });
-              }
-            }
-            if (downloads.length > 0) break;
-          }
-        }
-      } catch (e) {}
-    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return res.send(buffer);
+
+  } catch (err) {
+    console.error('Download Proxy Error:', err);
+    if (req.query.url) return res.redirect(req.query.url);
+    return res.status(500).send('Terjadi kesalahan saat mengunduh file.');
   }
-
-  // 4. Engine 3: Invidious API (Fallback Cadangan)
-  if (downloads.length === 0) {
-    const invidiousInstances = [
-      `https://inv.tux.pizza/api/v1/videos/${videoId}`,
-      `https://invidious.nerdvpn.de/api/v1/videos/${videoId}`
-    ];
-
-    for (const invEndpoint of invidiousInstances) {
-      try {
-        const invRes = await fetch(invEndpoint, { signal: AbortSignal.timeout(3000) });
-        if (invRes.ok) {
-          const invData = await invRes.json();
-          if (invData && invData.formatStreams && invData.formatStreams.length > 0) {
-            const mp4 = invData.formatStreams.find(s => s.container === 'mp4') || invData.formatStreams[0];
-            if (mp4 && mp4.url) {
-              downloads.push({
-                type: 'video',
-                quality: `${mp4.qualityLabel || '720p'} MP4`,
-                url: mp4.url
-              });
-              break;
-            }
-          }
-        }
-      } catch (e) {}
-    }
-  }
-
-  // 5. Engine 4: Reliable Direct Link Fallback (Bypass Blokir IP Vercel)
-  if (downloads.length === 0) {
-    downloads.push(
-      {
-        type: 'video',
-        quality: '720p MP4 (Fast Server)',
-        url: `https://ssyoutube.com/watch?v=${videoId}`
-      },
-      {
-        type: 'audio',
-        quality: 'Audio MP3 (Fast Server)',
-        url: `https://www.y2mate.com/youtube/${videoId}`
-      }
-    );
-  }
-
-  return res.json({
-    status: true,
-    platform: 'youtube',
-    title,
-    author,
-    duration: 'HD',
-    thumbnail,
-    downloads
-  });
-}
+});
 
 // Endpoint Utama API
 app.post('/api/fetch', async (req, res) => {
   const { url } = req.body || {};
-  if (!url) {
-    return res.status(400).json({ status: false, message: 'URL tidak boleh kosong!' });
-  }
+  if (!url) return res.status(400).json({ status: false, message: 'URL tidak boleh kosong!' });
 
   const platform = detectPlatform(url);
 
-  if (platform === 'youtube') {
-    return handleYouTube(url, res);
-  } else if (platform === 'tiktok') {
-    return handleTikTok(url, res);
-  } else {
-    return res.status(400).json({
-      status: false,
-      message: 'URL tidak didukung! Masukkan URL YouTube atau TikTok yang valid.'
-    });
-  }
+  if (platform === 'youtube') return handleYouTube(url, res);
+  if (platform === 'tiktok') return handleTikTok(url, res);
+
+  return res.status(400).json({ status: false, message: 'URL tidak didukung!' });
 });
 
 // Port Server Lokal (Localhost)
