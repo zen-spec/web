@@ -269,15 +269,14 @@ function renderQualityOptions(formats, platform) {
   qualityOptions.innerHTML = '';
   selectedQuality = null;
 
-  if (platform === 'tiktok' || formats.length === 0) {
-    // TikTok — satu pilihan saja
+  if (!formats || formats.length === 0) {
     const opt = createQualityBtn({ label: 'HD (Tanpa WM)', format_id: 'best', ext: 'mp4' }, true);
     qualityOptions.appendChild(opt);
     selectedQuality = { format_id: 'best', ext: 'mp4', label: 'HD (Tanpa WM)' };
     return;
   }
 
-  // YouTube — tampilkan pilihan
+  // Tampilkan pilihan format yang tersedia (YouTube & TikTok)
   formats.forEach((fmt, i) => {
     const opt = createQualityBtn(fmt, i === 0);
     qualityOptions.appendChild(opt);
