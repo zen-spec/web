@@ -1,21 +1,12 @@
 {
   "name": "saweria-downloader-backend",
   "version": "1.0.0",
-  "description": "Backend API Saweria Downloader menggunakan Express, TikTok API DL, dan YouTube Scraper",
-  "main": "server.js",
-  "type": "commonjs",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
+  "description": "Saweria Downloader Vercel Backend",
+  "main": "api/index.js",
   "dependencies": {
     "@maxinminax/tiktok-api-dl": "^1.0.0",
     "@vreden/youtube_scraper": "^2.9.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
     "express": "^4.19.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.0"
   }
 }
