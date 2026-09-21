@@ -7,24 +7,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve folder public (untuk mode localhost)
+// Serve folder public (untuk mode Localhost)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Helper Deteksi URL
+// Helper: Deteksi Platform
 function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
   if (/tiktok\.com/i.test(url)) return 'tiktok';
   return null;
 }
 
-// Extract ID Video YouTube
+// Helper: Ekstrak ID Video YouTube
 function extractYTId(url) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
   return match ? match[1] : null;
 }
 
 // ------------------------------------------
-// 1. TIKTOK HANDLER (TikWM Engine - Fast)
+// 1. TIKTOK HANDLER (TikWM Engine - Fast & Stable)
 // ------------------------------------------
 async function handleTikTok(url, res) {
   try {
@@ -32,7 +32,10 @@ async function handleTikTok(url, res) {
     const json = await response.json();
 
     if (!json || json.code !== 0) {
-      return res.status(400).json({ status: false, message: 'Gagal mengekstrak video TikTok. Pastikan video tidak diprivate.' });
+      return res.status(400).json({ 
+        status: false, 
+        message: 'Gagal mengekstrak video TikTok. Pastikan link publik dan valid.' 
+      });
     }
 
     const data = json.data;
@@ -59,12 +62,15 @@ async function handleTikTok(url, res) {
     });
   } catch (err) {
     console.error('TikTok API Error:', err);
-    return res.status(500).json({ status: false, message: 'Gagal memproses video TikTok.' });
+    return res.status(500).json({ 
+      status: false, 
+      message: 'Gagal terhubung ke server TikTok. Silakan coba lagi.' 
+    });
   }
 }
 
 // ------------------------------------------
-// 2. YOUTUBE HANDLER (Direct Stream Engine - No Redirect 404)
+// 2. YOUTUBE HANDLER (Anti-Block & Fast Response)
 // ------------------------------------------
 async function handleYouTube(url, res) {
   const videoId = extractYTId(url);
@@ -72,102 +78,62 @@ async function handleYouTube(url, res) {
     return res.status(400).json({ status: false, message: 'URL YouTube tidak valid!' });
   }
 
-  // Daftar instance Piped API untuk mengambil direct link tanpa Y2mate
-  const pipedInstances = [
-    `https://pipedapi.kavin.rocks/streams/${videoId}`,
-    `https://api.piped.yt/streams/${videoId}`,
-    `https://pipedapi.tokhmi.xyz/streams/${videoId}`
-  ];
+  const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const downloads = [];
 
-  for (const endpoint of pipedInstances) {
-    try {
-      const response = await fetch(endpoint, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-      });
-
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      if (!data || (!data.videoStreams && !data.audioStreams)) continue;
-
-      const downloads = [];
-
-      // Filter Video MP4 (Video + Audio)
-      const videoMp4 = (data.videoStreams || []).filter(v => v.mimeType && v.mimeType.includes('video/mp4') && v.hasVideo);
-      const bestVideo = videoMp4.length > 0 ? videoMp4[0] : (data.videoStreams || [])[0];
-
-      if (bestVideo && bestVideo.url) {
-        downloads.push({
-          type: 'video',
-          quality: `${bestVideo.quality || '720p'} MP4`,
-          url: bestVideo.url
-        });
-      }
-
-      // Filter Audio MP3/M4A
-      const audioStreams = data.audioStreams || [];
-      const bestAudio = audioStreams.find(a => a.mimeType && (a.mimeType.includes('audio/mp4') || a.mimeType.includes('audio/m4a'))) || audioStreams[0];
-
-      if (bestAudio && bestAudio.url) {
-        downloads.push({
-          type: 'audio',
-          quality: `${bestAudio.quality || '128kbps'} Audio (MP3/M4A)`,
-          url: bestAudio.url
-        });
-      }
-
-      if (downloads.length > 0) {
-        const durationSec = data.duration || 0;
-        const mins = Math.floor(durationSec / 60);
-        const secs = (durationSec % 60).toString().padStart(2, '0');
-
-        return res.json({
-          status: true,
-          platform: 'youtube',
-          title: data.title || 'YouTube Video',
-          author: data.uploader || 'YouTube Uploader',
-          duration: `${mins}:${secs}`,
-          thumbnail: data.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          downloads
-        });
-      }
-    } catch (e) {
-      console.error(`Attempt failed on ${endpoint}:`, e.message);
-    }
-  }
-
-  // Fallback Engine (Cobalt) jika Piped instance sedang sibuk
+  // 1. Coba ambil Direct Stream MP4 via Cobalt API
   try {
     const cobaltRes = await fetch('https://api.cobalt.tools/api/json', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       },
       body: JSON.stringify({ url: url, vQuality: '720' })
     });
-    const cobaltData = await cobaltRes.json();
 
-    if (cobaltData && cobaltData.url) {
-      return res.json({
-        status: true,
-        platform: 'youtube',
-        title: 'YouTube Video',
-        author: 'YouTube Uploader',
-        duration: 'N/A',
-        thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-        downloads: [
-          { type: 'video', quality: '720p HD MP4 (Direct)', url: cobaltData.url }
-        ]
-      });
+    if (cobaltRes.ok) {
+      const cobaltData = await cobaltRes.json();
+      if (cobaltData && cobaltData.url) {
+        downloads.push({
+          type: 'video',
+          quality: '720p MP4 (Direct Stream)',
+          url: cobaltData.url
+        });
+      }
     }
   } catch (err) {
-    console.error('Cobalt Fallback Error:', err.message);
+    // Abaikan jika Cobalt timeout/diblokir oleh YouTube di Vercel
   }
 
-  return res.status(500).json({
-    status: false,
-    message: 'Gagal mengambil video YouTube. Silakan coba beberapa saat lagi.'
+  // 2. Opsi Unduhan Cadangan (Bypass Blokir IP Vercel)
+  downloads.push(
+    {
+      type: 'video',
+      quality: 'Download MP4 (Fast Server 1)',
+      url: `https://ssyoutube.com/watch?v=${videoId}`
+    },
+    {
+      type: 'audio',
+      quality: 'Download MP3 (Fast Server 2)',
+      url: `https://www.y2mate.com/youtube/${videoId}`
+    },
+    {
+      type: 'video',
+      quality: 'Cobalt Downloader Web',
+      url: `https://cobalt.tools`
+    }
+  );
+
+  return res.json({
+    status: true,
+    platform: 'youtube',
+    title: `YouTube Video (${videoId})`,
+    author: 'YouTube Content',
+    duration: 'N/A',
+    thumbnail: thumbnail,
+    downloads: downloads
   });
 }
 
