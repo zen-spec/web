@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapSave Hub - Universal Multi-Quality Downloader</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome & Inter Font -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-body: #0b0f19;
+            --bg-card: #111827;
+            --border-color: #1f2937;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+        }
+
+        html:not(.dark) {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.2s ease;
+        }
+
+        .flat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+
+        .quality-btn.active {
+            border-color: #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.12) !important;
+            color: #10b981 !important;
+            font-weight: 700 !important;
+        }
+
+        .pref-btn.active {
+            border-color: #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            color: #10b981 !important;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 flat-card border-b border-t-0 border-x-0">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-lg font-bold shadow-md shadow-emerald-500/20">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <span class="text-lg font-extrabold tracking-tight">SnapSave<span class="text-emerald-500">Hub</span></span>
+                        <span class="block text-[10px] text-emerald-400 font-semibold -mt-1 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Scrapr API Engine
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-1 text-sm font-medium">
+                    <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-3.5 py-2 rounded-lg text-emerald-500 bg-emerald-500/10 font-semibold">
+                        <i class="fa-solid fa-house mr-1.5"></i> Beranda
+                    </button>
+                    <button onclick="switchTab('batch')" id="nav-batch" class="nav-btn px-3.5 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-layer-group mr-1.5"></i> Batch Mode
+                    </button>
+                    <button onclick="switchTab('history')" id="nav-history" class="nav-btn px-3.5 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i> Riwayat
+                        <span id="history-badge" class="ml-1.5 bg-emerald-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                    </button>
+                    <button onclick="openServerModal()" class="px-3.5 py-2 rounded-lg text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 font-semibold flex items-center">
+                        <i class="fa-solid fa-server mr-1.5"></i> Status API
+                    </button>
+                </nav>
+
+                <!-- Actions: Theme & Mobile Toggle -->
+                <div class="flex items-center space-x-2">
+                    <button id="theme-toggle" onclick="toggleTheme()" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="md:hidden w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 space-y-1 bg-slate-50 dark:bg-slate-900">
+            <button onclick="switchTab('home'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-emerald-500 bg-emerald-500/10 flex items-center">
+                <i class="fa-solid fa-house w-6"></i> Beranda
+            </button>
+            <button onclick="switchTab('batch'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center">
+                <i class="fa-solid fa-layer-group w-6"></i> Batch Downloader
+            </button>
+            <button onclick="switchTab('history'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                <span class="flex items-center"><i class="fa-solid fa-clock-rotate-left w-6"></i> Riwayat</span>
+                <span id="mobile-history-badge" class="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-bold hidden">0</span>
+            </button>
+            <button onclick="openServerModal(); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-amber-500 bg-amber-500/10 flex items-center">
+                <i class="fa-solid fa-server w-6"></i> Status Pengaturan Server
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- TAB 1: HOME SECTION -->
+        <section id="tab-home" class="tab-content">
+            <div class="max-w-4xl mx-auto px-4 pt-8 pb-10 text-center">
+                
+                <!-- Active Engine Status Badge -->
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-4">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Engine: <code id="server-badge-mode" class="font-mono">coflyn/scrapr API + Client Fallback</code>
+                </div>
+
+                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3">
+                    Downloader Video & Audio <span class="text-emerald-500">Multi-Kualitas</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-6">
+                    Unduh dari TikTok (Tanpa Watermark), YouTube (1080p, 720p, 480p, MP3), Instagram, Facebook, X, & SoundCloud tanpa watermark.
+                </p>
+
+                <!-- Input Form Card -->
+                <div class="flat-card rounded-2xl p-3 sm:p-5 shadow-lg shadow-emerald-500/5 max-w-3xl mx-auto">
+                    
+                    <!-- Quality Target Selector Pills -->
+                    <div class="mb-3.5 flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                        <span class="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-sliders text-emerald-500"></i> Quality Target:
+                        </span>
+                        <div class="flex flex-wrap gap-1 text-[11px]" id="preferred-quality-group">
+                            <button type="button" onclick="setPreferredQuality('max')" id="pref-max" class="pref-btn active px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold transition-all">Auto (Max)</button>
+                            <button type="button" onclick="setPreferredQuality('1080')" id="pref-1080" class="pref-btn px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold transition-all">1080p FHD</button>
+                            <button type="button" onclick="setPreferredQuality('720')" id="pref-720" class="pref-btn px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold transition-all">720p HD</button>
+                            <button type="button" onclick="setPreferredQuality('480')" id="pref-480" class="pref-btn px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold transition-all">480p SD</button>
+                            <button type="button" onclick="setPreferredQuality('audio')" id="pref-audio" class="pref-btn px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold transition-all text-amber-500">MP3 Audio</button>
+                        </div>
+                    </div>
+
+                    <!-- URL Input Box Form -->
+                    <form id="download-form" onsubmit="event.preventDefault(); processUrl();">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <div class="relative flex-grow">
+                                <div id="platform-badge" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center gap-1.5 text-xs font-semibold">
+                                    <i class="fa-solid fa-link"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="url-input" 
+                                    oninput="handleUrlInput()"
+                                    placeholder="Tempel link TikTok, YouTube, Instagram, FB, X..." 
+                                    class="w-full pl-9 pr-24 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-xs sm:text-sm font-medium"
+                                    autocomplete="off"
+                                />
+                                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                                    <button 
+                                        type="button" 
+                                        id="clear-btn"
+                                        onclick="clearInput()" 
+                                        class="hidden px-2 py-1 text-slate-400 hover:text-rose-500 rounded text-xs"
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onclick="pasteClipboard()" 
+                                        class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold rounded-lg transition-all"
+                                    >
+                                        <i class="fa-regular fa-clipboard"></i> Tempel
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+                            >
+                                <i class="fa-solid fa-bolt flex-none"></i> Proses Link
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Sample Preset Links -->
+                    <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-slate-400 font-semibold">Uji Coba:</span>
+                            <button onclick="fillPreset('tiktok')" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold border border-slate-200 dark:border-slate-700">
+                                <i class="fa-brands fa-tiktok text-pink-500 mr-1"></i> TikTok
+                            </button>
+                            <button onclick="fillPreset('youtube')" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold border border-slate-200 dark:border-slate-700">
+                                <i class="fa-brands fa-youtube text-red-500 mr-1"></i> YouTube
+                            </button>
+                            <button onclick="fillPreset('instagram')" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold border border-slate-200 dark:border-slate-700">
+                                <i class="fa-brands fa-instagram text-purple-500 mr-1"></i> Instagram
+                            </button>
+                        </div>
+                        <div class="text-slate-400 text-[10px]">
+                            Status Engine: <span class="text-emerald-400 font-bold">Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Loader -->
+                <div id="analysis-loader" class="hidden mt-6 max-w-xl mx-auto flat-card p-5 rounded-2xl text-center">
+                    <div class="w-10 h-10 mx-auto mb-3 border-3 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+                    <h3 id="loader-status" class="font-bold text-sm mb-1 text-emerald-500">Mengekstrak Link Media...</h3>
+                    <p id="loader-subtext" class="text-[11px] text-slate-400 mb-3">Mencari stream resolusi dan audio terbaik...</p>
+                    <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="loader-bar" class="bg-emerald-500 h-full w-1/4 transition-all duration-300"></div>
+                    </div>
+                </div>
+
+                <!-- Error Display Box -->
+                <div id="error-box" class="hidden mt-6 max-w-2xl mx-auto flat-card border-rose-500/50 p-4 rounded-2xl text-left bg-rose-500/10">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-circle-exclamation text-rose-500 text-lg mt-0.5"></i>
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-xs sm:text-sm text-rose-500 mb-1">Gagal Memproses Media</h4>
+                            <p id="error-msg" class="text-xs text-slate-300 leading-relaxed">Pesan error detail.</p>
+                            <div class="mt-2 text-[10px] text-slate-400">
+                                Solusi: Periksa kembali format URL atau coba ganti target kualitas.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Container Box -->
+                <div id="result-container" class="hidden mt-6 max-w-3xl mx-auto text-left">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Features Info Grid -->
+            <div class="max-w-6xl mx-auto px-4 py-8 border-t border-slate-200 dark:border-slate-800">
+                <div class="grid md:grid-cols-3 gap-4 text-xs">
+                    <div class="flat-card p-4 rounded-xl flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-base flex-none">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-1">Scrapr Integration</h4>
+                            <p class="text-slate-400">Terhubung langsung ke backend <code>coflyn/scrapr</code> Vercel Serverless Function.</p>
+                        </div>
+                    </div>
+                    <div class="flat-card p-4 rounded-xl flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-base flex-none">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-1">Atur Kualitas Bebas</h4>
+                            <p class="text-slate-400">Pilih resolusi 1080p FHD, 720p HD, 480p SD, atau konversi ke audio MP3 320kbps.</p>
+                        </div>
+                    </div>
+                    <div class="flat-card p-4 rounded-xl flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-base flex-none">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-1">Smart Client Fallback</h4>
+                            <p class="text-slate-400">Otomatis beralih ke TikWM & Piped Client Fallback jika di-host tanpa Node.js (seperti Nura.host).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: BATCH DOWNLOADER -->
+        <section id="tab-batch" class="tab-content hidden max-w-4xl mx-auto px-4 py-8">
+            <div class="flat-card p-5 sm:p-6 rounded-2xl">
+                <div class="flex items-center gap-2.5 mb-4">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold">Batch Multi-Link Downloader</h2>
+                        <p class="text-[11px] text-slate-400">Masukkan beberapa link (satu URL per baris) untuk diproses sekaligus</p>
+                    </div>
+                </div>
+
+                <textarea 
+                    id="batch-urls" 
+                    rows="5" 
+                    placeholder="https://vt.tiktok.com/ZSwWCk5o/&#10;https://www.youtube.com/watch?v=eZskFo64rs8"
+                    class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs focus:outline-none focus:border-emerald-500 font-mono"
+                ></textarea>
+
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-[10px] text-slate-400">Maksimal 5 URL diproses sekuensial</span>
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('batch-urls').value=''" class="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-xs font-semibold">
+                            Bersihkan
+                        </button>
+                        <button onclick="processBatch()" class="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">
+                            Proses Batch
+                        </button>
+                    </div>
+                </div>
+
+                <div id="batch-results" class="mt-6 hidden">
+                    <h3 class="font-bold text-xs border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">Hasil Pemrosesan Batch</h3>
+                    <div id="batch-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: HISTORY -->
+        <section id="tab-history" class="tab-content hidden max-w-4xl mx-auto px-4 py-8">
+            <div class="flat-card p-5 sm:p-6 rounded-2xl">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold">Riwayat Unduhan Media</h2>
+                            <p class="text-[11px] text-slate-400">Tersimpan secara lokal di browser Anda</p>
+                        </div>
+                    </div>
+                    <button onclick="clearHistory()" class="px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-500 text-xs font-bold hover:bg-rose-500/10">
+                        Hapus Semua
+                    </button>
+                </div>
+
+                <div id="history-grid" class="grid sm:grid-cols-2 gap-3"></div>
+                <div id="history-empty" class="text-center py-8">
+                    <p class="text-xs text-slate-400">Belum ada riwayat unduhan.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SERVER API CONFIG MODAL -->
+    <div id="server-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="flat-card max-w-md w-full rounded-2xl p-5 shadow-2xl relative">
+            <button onclick="closeServerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex items-center gap-2.5 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-server"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm">Status Endpoint & Scrapr Engine</h3>
+                    <p class="text-[10px] text-slate-400">Pengaturan konfigurasi backend scraper</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Serverless Endpoint Path</label>
+                    <input 
+                        type="text" 
+                        id="endpoint-url-input" 
+                        value="/api/scrape"
+                        class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-amber-400 focus:outline-none focus:border-amber-500 text-xs" 
+                    />
+                </div>
+                
+                <div class="p-3 bg-slate-800/50 rounded-xl text-[10px] text-slate-300 space-y-1.5 border border-slate-700/50">
+                    <p><strong>Status Backend:</strong> <span class="text-emerald-400 font-bold">Auto-Detect Node.js Vercel</span></p>
+                    <p class="text-slate-400">Jika endpoint `/api/scrape` tidak ditemukan (seperti saat hosting di Nura.host/cPanel biasa), sistem otomatis berpindah ke <strong>Client Fallback Chain Engine</strong>.</p>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeServerModal()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="flat-card border-b-0 border-x-0 mt-auto py-4 text-xs text-slate-400">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>© 2026 SnapSave Hub. Powered by coflyn/scrapr API.</span>
+            <span class="text-[11px]">Ready for Vercel Serverless & Nura.host Shared Hosting</span>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        // Global State Management
+        let customEndpoint = localStorage.getItem('snapsave_endpoint') || '/api/scrape';
+        let historyStore = JSON.parse(localStorage.getItem('snapsave_history_v4') || '[]');
+        let preferredQuality = 'max'; // 'max', '1080', '720', '480', 'audio'
+        let currentMediaData = null;
+
+        const PRESETS = {
+            tiktok: "https://vt.tiktok.com/ZSwWCk5o/",
+            youtube: "https://www.youtube.com/watch?v=eZskFo64rs8",
+            instagram: "https://www.instagram.com/p/C3x9L-1r4J2/"
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateHistoryBadge();
+            renderHistoryGrid();
+
+            if (localStorage.theme === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun text-amber-500';
+            }
+        });
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            const themeIcon = document.getElementById('theme-icon');
+            if (isDark) {
+                localStorage.theme = 'dark';
+                themeIcon.className = 'fa-solid fa-moon text-slate-300';
+                showToast('Mode Gelap diaktifkan');
+            } else {
+                localStorage.theme = 'light';
+                themeIcon.className = 'fa-solid fa-sun text-amber-500';
+                showToast('Mode Terang diaktifkan');
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-500', 'bg-emerald-500/10', 'font-semibold');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) {
+                activeNav.classList.add('text-emerald-500', 'bg-emerald-500/10', 'font-semibold');
+                activeNav.classList.remove('text-slate-600', 'dark:text-slate-300');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function setPreferredQuality(qual) {
+            preferredQuality = qual;
+            document.querySelectorAll('.pref-btn').forEach(btn => btn.classList.remove('active'));
+            const targetBtn = document.getElementById(`pref-${qual}`);
+            if (targetBtn) targetBtn.classList.add('active');
+            showToast(`Target Kualitas diset ke: ${qual.toUpperCase()}`);
+        }
+
+        function openServerModal() {
+            document.getElementById('server-modal').classList.remove('hidden');
+        }
+
+        function closeServerModal() {
+            document.getElementById('server-modal').classList.add('hidden');
+        }
+
+        // Core Fetcher: Scrapr API Backend with Client Fallback Chain
+        async function fetchMediaStream(targetUrl, qualitySetting = preferredQuality) {
+            const loaderStatus = document.getElementById('loader-status');
+            const loaderBar = document.getElementById('loader-bar');
+
+            // STEP 1: Attempt Vercel Scrapr Backend Endpoint (/api/scrape)
+            try {
+                loaderStatus.innerText = "Connecting to Vercel Scrapr Backend...";
+                loaderBar.style.width = "40%";
+
+                const apiUrl = `${customEndpoint}?url=${encodeURIComponent(targetUrl)}`;
+                const response = await fetch(apiUrl);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.status && data.result) {
+                        return normalizeScraprResponse(data.result, targetUrl, qualitySetting);
+                    }
+                }
+            } catch (err) {
+                console.warn("Vercel Scrapr Endpoint not available. Switching to Client Fallback Engine...", err);
+            }
+
+            // STEP 2: Client Fallback Engine (TikWM, Tiklydown, Piped)
+            loaderStatus.innerText = "Using Client Fallback Engine...";
+            loaderBar.style.width = "75%";
+
+            const platform = detectPlatform(targetUrl);
+
+            // TikTok Client Fallback
+            if (platform && platform.key === 'tiktok') {
+                try {
+                    const tikRes = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(targetUrl)}`);
+                    if (tikRes.ok) {
+                        const tikData = await tikRes.json();
+                        if (tikData.code === 0 && tikData.data) {
+                            return {
+                                platform: 'TikTok',
+                                platformKey: 'tiktok',
+                                title: tikData.data.title || 'TikTok Video No Watermark',
+                                author: tikData.data.author ? tikData.data.author.nickname || 'TikTok User' : 'TikTok Creator',
+                                thumbnail: tikData.data.cover || tikData.data.origin_cover,
+                                type: qualitySetting === 'audio' ? 'audio' : 'video',
+                                downloadUrl: qualitySetting === 'audio' ? tikData.data.music : (tikData.data.play || tikData.data.wmplay),
+                                audioUrl: tikData.data.music,
+                                qualityKey: qualitySetting === 'audio' ? 'MP3' : '1080p (No-WM)',
+                                pickerItems: tikData.data.images ? tikData.data.images.map(img => ({ url: img, thumb: img })) : null
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.warn("TikWM Fallback failed:", e);
+                }
+            }
+
+            // YouTube Client Fallback (Piped API Multi-Instance)
+            if (platform && platform.key === 'youtube') {
+                try {
+                    const videoId = extractYouTubeId(targetUrl);
+                    if (videoId) {
+                        const pipedRes = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
+                        if (pipedRes.ok) {
+                            const pipedData = await pipedRes.json();
+                            const videoStreams = pipedData.videoStreams || [];
+                            const audioStreams = pipedData.audioStreams || [];
+
+                            let selectedStream = null;
+                            if (qualitySetting === 'audio') {
+                                selectedStream = audioStreams[0];
+                            } else {
+                                const targetHeight = parseInt(qualitySetting) || 1080;
+                                selectedStream = videoStreams.find(s => s.height <= targetHeight) || videoStreams[0];
+                            }
+
+                            if (selectedStream) {
+                                return {
+                                    platform: 'YouTube',
+                                    platformKey: 'youtube',
+                                    title: pipedData.title || 'YouTube Video Stream',
+                                    author: pipedData.uploader || 'YouTube Creator',
+                                    thumbnail: pipedData.thumbnailUrl || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                                    type: qualitySetting === 'audio' ? 'audio' : 'video',
+                                    downloadUrl: selectedStream.url,
+                                    audioUrl: audioStreams[0] ? audioStreams[0].url : null,
+                                    qualityKey: qualitySetting === 'audio' ? 'MP3 Audio' : (selectedStream.quality || qualitySetting)
+                                };
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Piped Fallback failed:", e);
+                }
+            }
+
+            throw new Error("Gagal mengambil data dari server. Pastikan URL valid atau telah dipublikasikan secara publik.");
+        }
+
+        function normalizeScraprResponse(result, originalUrl, qualitySetting) {
+            const platform = detectPlatform(originalUrl) || { name: 'Media', key: 'universal' };
+
+            let title = result.title || result.caption || `Media_${platform.name}_${Date.now()}`;
+            let author = result.author || result.nickname || 'Creator';
+            let thumbnail = result.thumbnail || result.cover || result.origin_cover || 'https://placehold.co/600x400/10b981/ffffff?text=SnapSave+Hub';
+            let downloadUrl = result.url || result.nowatermark || result.play || result.hdplay || (result.urls && result.urls[0] ? result.urls[0].url : '');
+            let audioUrl = result.audio || result.music || null;
+
+            if (qualitySetting === 'audio' && audioUrl) {
+                downloadUrl = audioUrl;
+            }
+
+            return {
+                platform: platform.name,
+                platformKey: platform.key,
+                title: title,
+                author: author,
+                thumbnail: thumbnail,
+                type: qualitySetting === 'audio' ? 'audio' : 'video',
+                downloadUrl: downloadUrl,
+                audioUrl: audioUrl,
+                qualityKey: qualitySetting === 'audio' ? 'MP3 Audio' : qualitySetting.toUpperCase(),
+                pickerItems: result.images ? result.images.map(img => ({ url: img, thumb: img })) : null
+            };
+        }
+
+        function extractYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function detectPlatform(url) {
+            const lower = url.toLowerCase();
+            if (lower.includes('tiktok.com') || lower.includes('vt.tiktok.com')) {
+                return { name: 'TikTok', key: 'tiktok', icon: 'fa-brands fa-tiktok text-pink-500' };
+            }
+            if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+                return { name: 'YouTube', key: 'youtube', icon: 'fa-brands fa-youtube text-red-500' };
+            }
+            if (lower.includes('instagram.com') || lower.includes('instagr.am')) {
+                return { name: 'Instagram', key: 'instagram', icon: 'fa-brands fa-instagram text-purple-500' };
+            }
+            if (lower.includes('facebook.com') || lower.includes('fb.watch')) {
+                return { name: 'Facebook', key: 'facebook', icon: 'fa-brands fa-facebook text-blue-500' };
+            }
+            if (lower.includes('twitter.com') || lower.includes('x.com')) {
+                return { name: 'X / Twitter', key: 'twitter', icon: 'fa-brands fa-x-twitter text-slate-300' };
+            }
+            if (lower.includes('soundcloud.com')) {
+                return { name: 'SoundCloud', key: 'soundcloud', icon: 'fa-brands fa-soundcloud text-orange-500' };
+            }
+            return null;
+        }
+
+        function handleUrlInput() {
+            const val = document.getElementById('url-input').value.trim();
+            const badge = document.getElementById('platform-badge');
+            const clearBtn = document.getElementById('clear-btn');
+
+            if (val.length > 0) {
+                clearBtn.classList.remove('hidden');
+                const detected = detectPlatform(val);
+                if (detected) {
+                    badge.innerHTML = `<i class="${detected.icon}"></i> <span>${detected.name}</span>`;
+                } else {
+                    badge.innerHTML = `<i class="fa-solid fa-globe text-emerald-500"></i> <span>Universal</span>`;
+                }
+            } else {
+                clearBtn.classList.add('hidden');
+                badge.innerHTML = `<i class="fa-solid fa-link"></i>`;
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('url-input').value = '';
+            handleUrlInput();
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('error-box').classList.add('hidden');
+        }
+
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('url-input').value = text;
+                    handleUrlInput();
+                    showToast('Link ditempel dari Clipboard!');
+                }
+            } catch (e) {
+                showToast('Gagal membaca clipboard. Tempel secara manual.');
+            }
+        }
+
+        function fillPreset(type) {
+            if (PRESETS[type]) {
+                document.getElementById('url-input').value = PRESETS[type];
+                handleUrlInput();
+                processUrl();
+            }
+        }
+
+        async function processUrl() {
+            const inputVal = document.getElementById('url-input').value.trim();
+            if (!inputVal) {
+                showToast('Masukkan link TikTok, YouTube, atau media lainnya!');
+                return;
+            }
+
+            const loader = document.getElementById('analysis-loader');
+            const resultBox = document.getElementById('result-container');
+            const errorBox = document.getElementById('error-box');
+
+            resultBox.classList.add('hidden');
+            errorBox.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                const parsedData = await fetchMediaStream(inputVal, preferredQuality);
+                currentMediaData = parsedData;
+                loader.classList.add('hidden');
+                renderResultCard();
+                showToast('Media stream berhasil ditemukan!');
+            } catch (err) {
+                loader.classList.add('hidden');
+                document.getElementById('error-msg').innerText = err.message;
+                errorBox.classList.remove('hidden');
+                showToast('Gagal memproses URL');
+            }
+        }
+
+        function renderResultCard() {
+            if (!currentMediaData) return;
+            const container = document.getElementById('result-container');
+            const data = currentMediaData;
+
+            let pickerGalleryHTML = '';
+            if (data.pickerItems && data.pickerItems.length > 0) {
+                pickerGalleryHTML = `
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <h4 class="text-xs font-bold text-slate-400 mb-2">Album Item Slideshow (${data.pickerItems.length} File):</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            ${data.pickerItems.map((item, idx) => `
+                                <div class="flat-card p-2 rounded-xl text-center bg-slate-900/50">
+                                    <img src="${item.thumb || item.url}" class="w-full h-24 object-cover rounded-lg mb-2">
+                                    <button onclick="downloadDirect('${item.url}', 'Item_${idx+1}.jpg', '${data.title}', 'Image')" class="w-full py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-[10px]">
+                                        Unduh #${idx+1}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let previewPlayerHTML = '';
+            if (data.type === 'video') {
+                previewPlayerHTML = `
+                    <div class="mt-4 rounded-xl overflow-hidden bg-black/80 border border-slate-700/50">
+                        <div class="p-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-300">
+                            <span><i class="fa-solid fa-circle-play text-emerald-400 mr-1"></i> HTML5 Live Preview</span>
+                            <span class="text-[10px] text-emerald-500 font-mono">${data.qualityKey} Stream</span>
+                        </div>
+                        <video id="media-preview-player" controls class="w-full max-h-72 object-contain rounded-b-xl" poster="${data.thumbnail}">
+                            <source src="${data.downloadUrl}" type="video/mp4">
+                            Browser Anda tidak mendukung preview video.
+                        </video>
+                    </div>
+                `;
+            } else {
+                previewPlayerHTML = `
+                    <div class="mt-4 p-4 rounded-xl bg-slate-900/90 border border-amber-500/30">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-amber-400 font-bold"><i class="fa-solid fa-music mr-1.5"></i> MP3 Audio Player Preview</span>
+                            <span class="text-[10px] text-slate-400">320 kbps Stereo</span>
+                        </div>
+                        <audio id="media-preview-player" controls class="w-full h-9">
+                            <source src="${data.downloadUrl}" type="audio/mpeg">
+                            Browser Anda tidak mendukung preview audio.
+                        </audio>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="flat-card p-4 sm:p-5 rounded-2xl border-emerald-500/40 shadow-xl">
+                    <div class="grid sm:grid-cols-12 gap-4 items-start pb-4 border-b border-slate-200 dark:border-slate-800">
+                        <div class="sm:col-span-4 relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
+                            <img src="${data.thumbnail}" class="w-full aspect-video object-cover" onerror="this.src='https://placehold.co/600x400/10b981/ffffff?text=SnapSave+Hub'">
+                            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                                ${data.platform.toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="sm:col-span-8 flex flex-col justify-between h-full">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded">
+                                        <i class="fa-solid fa-check-circle mr-1"></i> Stream Ready
+                                    </span>
+                                    <button onclick="copyToClipboard('${data.downloadUrl}')" class="text-[11px] text-slate-400 hover:text-emerald-500">
+                                        <i class="fa-regular fa-copy mr-1"></i> Salin Direct Link
+                                    </button>
+                                </div>
+                                <h3 class="font-bold text-xs sm:text-sm leading-snug line-clamp-2">${data.title}</h3>
+                                <p class="text-[11px] text-slate-400 mt-1">Platform: <span class="font-bold text-slate-300">${data.platform}</span> • Creator: <span class="font-bold text-slate-300">${data.author}</span></p>
+                            </div>
+
+                            <div class="mt-4">
+                                <button 
+                                    onclick="downloadDirect('${data.downloadUrl}', '${data.platform}_${Date.now()}.${data.type === 'audio' ? 'mp3' : 'mp4'}', '${data.title}', '${data.type.toUpperCase()}')" 
+                                    class="w-full px-4 py-3 rounded-xl ${data.type === 'audio' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white font-bold text-xs sm:text-sm flex justify-between items-center transition-all shadow-md"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        <i class="fa-solid fa-cloud-arrow-down text-base"></i>
+                                        <span>Unduh Sekarang (${data.type === 'audio' ? 'MP3 Audio' : 'Video ' + data.qualityKey})</span>
+                                    </span>
+                                    <span class="bg-black/20 px-2.5 py-1 rounded-lg text-[10px] font-mono">
+                                        Fast Direct
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="text-slate-400 font-bold">Ganti Kualitas / Format:</span>
+                        <div class="flex flex-wrap gap-1">
+                            <button onclick="reFetchQuality('1080')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 text-[11px] font-bold border border-slate-200 dark:border-slate-700">1080p</button>
+                            <button onclick="reFetchQuality('720')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 text-[11px] font-bold border border-slate-200 dark:border-slate-700">720p</button>
+                            <button onclick="reFetchQuality('480')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-500 text-[11px] font-bold border border-slate-200 dark:border-slate-700">480p</button>
+                            <button onclick="reFetchQuality('audio')" class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 text-[11px] font-bold border border-amber-500/30">Audio MP3</button>
+                        </div>
+                    </div>
+
+                    ${previewPlayerHTML}
+                    ${pickerGalleryHTML}
+                </div>
+            `;
+
+            container.classList.remove('hidden');
+        }
+
+        function reFetchQuality(newQual) {
+            setPreferredQuality(newQual);
+            processUrl();
+        }
+
+        function downloadDirect(fileUrl, fileName, title, formatLabel) {
+            showToast(`Mempersiapkan unduhan: ${formatLabel}...`);
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.target = '_blank';
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            addToHistory(title, fileName, formatLabel, fileUrl);
+        }
+
+        function copyToClipboard(text) {
+            if (!text) return;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Direct stream link berhasil disalin!');
+        }
+
+        function addToHistory(title, fileName, format, url) {
+            const item = {
+                id: Date.now(),
+                title: title,
+                fileName: fileName,
+                format: format,
+                url: url,
+                date: new Date().toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            };
+            historyStore.unshift(item);
+            if (historyStore.length > 20) historyStore.pop();
+            localStorage.setItem('snapsave_history_v4', JSON.stringify(historyStore));
+            updateHistoryBadge();
+            renderHistoryGrid();
+        }
+
+        function updateHistoryBadge() {
+            const count = historyStore.length;
+            const b1 = document.getElementById('history-badge');
+            const b2 = document.getElementById('mobile-history-badge');
+            if (count > 0) {
+                b1.innerText = count; b2.innerText = count;
+                b1.classList.remove('hidden'); b2.classList.remove('hidden');
+            } else {
+                b1.classList.add('hidden'); b2.classList.add('hidden');
+            }
+        }
+
+        function renderHistoryGrid() {
+            const grid = document.getElementById('history-grid');
+            const empty = document.getElementById('history-empty');
+
+            if (historyStore.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = historyStore.map(item => `
+                <div class="flat-card p-3 rounded-xl flex items-center justify-between text-xs">
+                    <div class="overflow-hidden pr-2">
+                        <span class="text-[10px] text-emerald-500 font-bold block">
+                            <i class="fa-solid fa-tag mr-1"></i>${item.format} • ${item.date}
+                        </span>
+                        <h4 class="font-bold truncate text-[11px]">${item.title}</h4>
+                    </div>
+                    <button onclick="downloadDirect('${item.url}', '${item.fileName}', '${item.title}', '${item.format}')" class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded text-[10px] whitespace-nowrap">
+                        Unduh
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            historyStore = [];
+            localStorage.removeItem('snapsave_history_v4');
+            updateHistoryBadge();
+            renderHistoryGrid();
+            showToast('Riwayat unduhan dibersihkan.');
+        }
+
+        async function processBatch() {
+            const text = document.getElementById('batch-urls').value.trim();
+            if (!text) {
+                showToast('Masukkan sekumpulan link terlebih dahulu!');
+                return;
+            }
+
+            const urls = text.split('\n').map(u => u.trim()).filter(u => u.length > 0).slice(0, 5);
+            const results = document.getElementById('batch-results');
+            const list = document.getElementById('batch-list');
+
+            results.classList.remove('hidden');
+            list.innerHTML = '<div class="text-xs text-slate-400 p-2"><i class="fa-solid fa-spinner animate-spin mr-2"></i> Menganalisis batch...</div>';
+
+            let listHTML = '';
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                try {
+                    const parsed = await fetchMediaStream(url, 'max');
+                    listHTML += `
+                        <div class="flat-card p-3 rounded-xl flex items-center justify-between text-xs border-emerald-500/30">
+                            <div class="truncate pr-2">
+                                <span class="font-bold block text-[11px] text-emerald-400"><i class="fa-solid fa-check-circle mr-1"></i> #${i+1} ${parsed.title}</span>
+                                <span class="text-[10px] text-slate-400 truncate block">${url}</span>
+                            </div>
+                            <button onclick="downloadDirect('${parsed.downloadUrl}', 'Batch_${i+1}.mp4', '${parsed.title}', 'Batch')" class="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded text-[10px] whitespace-nowrap">
+                                Unduh
+                            </button>
+                        </div>
+                    `;
+                } catch (e) {
+                    listHTML += `
+                        <div class="flat-card p-3 rounded-xl flex items-center justify-between text-xs border-rose-500/30">
+                            <div class="truncate pr-2">
+                                <span class="font-bold block text-[11px] text-rose-400"><i class="fa-solid fa-xmark-circle mr-1"></i> #${i+1} Gagal memproses URL</span>
+                                <span class="text-[10px] text-slate-400 truncate block">${url}</span>
+                            </div>
+                            <span class="text-[10px] text-rose-500 font-semibold">Error API</span>
+                        </div>
+                    `;
+                }
+            }
+
+            list.innerHTML = listHTML;
+            showToast('Pemrosesan batch selesai!');
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'flat-card bg-slate-900 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xl border border-slate-700 transition-all duration-200 pointer-events-auto flex items-center gap-2';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 200);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
